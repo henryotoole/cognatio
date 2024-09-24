@@ -3,7 +3,7 @@
  * @author Josh Reed
  */
 
-import {Region, Fabricator, RHElement, RegInInput, RegInCheckbox} from "../../regional/regional.js"
+import {Region, Fabricator, RHElement, RegInInput, RegInCheckbox, ErrorREST} from "../../regional/regional.js"
 import {RegSWNav, HTML_STUBS, PageAccessMode, RegInCBTypeset} from "../nav.js"
 
 class RegNewPage extends Region
@@ -185,6 +185,33 @@ class RegNewPage extends Region
 			}).then(()=>
 			{
 				res()
+			}).catch((e)=>{
+				if(e instanceof ErrorREST && e.data.http_code == 403)
+				{
+					let prom
+					if(this.swyd.settings.user_id == undefined)
+					{
+						prom = this.swyd.reg_two_choice.present_choice(
+							"Page Creation Not Authorized",
+							"Authorization is required to create a page, and you are not logged into an account. " +
+							"Would you like to sign in?",
+							"Go Back",
+							"Log In"
+						).then(()=>
+						{
+							this.swyd.reg_login.activate()
+						})
+					}
+					else
+					{
+						prom = this.swyd.reg_one_choice.present_message(
+							"Page Access Not Authorized",
+							"Your user account is not authorized to create pages."
+						)
+					}
+					this.deactivate()
+				}
+				throw(e)
 			})
 		})
 		

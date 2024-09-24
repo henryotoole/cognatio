@@ -352,6 +352,8 @@ class DHREST extends DHTabular
 				let id = returned_data[this._id_key]
 				this._local_data_set_from_server(id, returned_data)
 				res(id)
+			}).catch((e)=>{
+				rej(e)
 			})
 		})
 	}
@@ -368,25 +370,24 @@ class DHREST extends DHTabular
 	 */
 	async _create(data)
 	{
-		return new Promise((res, rej)=>
-		{
-			fetch(
-				this._url_for(undefined),
-				{
-					method: "POST",
-					body: JSON.stringify(data),
-					headers: JSON_HEADERS,
-				}
-			).then((response)=>{
-				if(response.status == 200)
-				{
-					res(response.json())
-				}
-				else
-				{
-					rej(`Creation of new ${this.constructor.name} fails with code ${response.status}`)
-				}
-			})
+		return fetch(
+			this._url_for(undefined),
+			{
+				method: "POST",
+				body: JSON.stringify(data),
+				headers: JSON_HEADERS,
+			}
+		).then((response)=>{
+			if(response.status == 200)
+			{
+				return response.json()
+			}
+			else
+			{
+				throw new ErrorREST(
+					"Create new", "POST", response.status
+				)
+			}
 		})
 	}
 

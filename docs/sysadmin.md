@@ -39,3 +39,50 @@ Valkey and Redis are seemingly identical. Either server should work.
 
 ### Config ###
 # TODO config paths and searching
+
+### SystemD ###
+Recommended service file style:
+```conf
+[Unit]
+Description=Starts/stops the Cognatio server.
+After=network.target
+
+[Service]
+User=v2r
+Group=www-data
+RuntimeDirectory=cognatio
+WorkingDirectory=/the_root/servers/flask/cognatio/
+Environment="PATH=/the_root/servers/venvs/cognatio/bin"
+ExecStart=/the_root/servers/venvs/cognatio/bin/gunicorn --workers 3 --bind unix:/run/cognatio/cognatio.sock -m 007 cognatio.web.wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+If manual rotating logs are desired, one can slap | multilog n2 /var/log/cognatio 2>&1 at the end of the ExecStart
+command. See https://cr.yp.to/daemontools/multilog.html for some unfathomably based documentation on multilog.
+
+Note the use of a runtime directory that enables workspace at /run/cognatio. Logs could perhaps go in here too.
+
+
+### RAW STEPS ###
+1. Setup a virtualenv for the installation.
+2. Install all required packages.
+3. Manually install hacutils and dispatch_server with setup.py
+4. Choose config location and create.
+5. Find directories for static files to live. Create them and link in config.
+6. Choose a database name and create the database. (USER WOULD NEED TO INSTALL DB SOFTWARE OF SOME SORT)
+7. Choose redis index (USER WOULD NEED TO SETUP VALKEY OR REDIS)
+8. Choose secret key and hostname.
+9. Create systemd service to start the gunicorn part of the server.
+10. Setup NGINX
+	a. (USER WOULD NEED TO INSTALL)
+	b. Create a cognatio.conf file
+	c. Get SSL working (sudo certbot certonly --standalone -d DOMAIN)
+	d. Install gunicorn into venv
+	e. Create start script.
+	
+CODE TODO
+1. Setup NGINX access to static files.
+2. Setup autogeneration of the 'gateway' page.
+3. Update remainder of dh_rest with proper error response
