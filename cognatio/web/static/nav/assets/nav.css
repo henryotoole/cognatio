@@ -1,0 +1,319 @@
+/**
+@file Contains some very general CSS classes that apply to the Navigator as a whle
+@author Josh Reed
+*/
+
+/* Variables */
+
+
+:root {
+	--darkest: #111111;
+	--darker: #1B1B1B;
+	--dark: #2A2A2A;
+	--red-dark: #5e211b;
+	--red: #984B43;
+	--red-light: #dd9a92;
+	--white-off: #f5f3ec;
+	--green: #006400;
+	--punchcard-beige: #f6e3b2;
+	--punchcard-beige-dark: #e6c18a;
+	--punchcard-beige-darker: #705939;
+	--metal-blue-light: #7c8a88;
+	--metal-blue: #434f48;
+	--metal-blue-dark: #282b28;
+	--metal-lighter: #b8bbb8;
+	--metal-light: #6e726e;
+	--metal-grey: #282b28;
+	--metal-dark: #191502;
+	--brass-dark: #60400b;
+	--brass: #8b692e;
+	--brass-light: #96773b;
+	--brass-lightest: #dbca71;
+	--ethblue-lightest: #aaffff;
+	--ethblue-light: #74f3f1;
+	--ethblue: #43c8c2;
+	--ethblue-dark: #176f66;
+}
+
+button {
+	all: unset;
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+iframe {
+	all: unset;
+}
+
+body {
+	all: unset;
+	font-family: "Raleway";
+	font-weight: 400;
+	font-style: normal;
+}
+
+/* Base HTML Tags */
+
+/* Classes */
+
+& .punchcard-cont
+{
+	position: absolute;
+	color: var(--punchcard-beige-darker);
+	background-color: transparent;
+	border-radius: 5px;
+	overflow: hidden;
+	border: 1px solid var(--punchcard-beige-darker);
+
+	font-family: "Special Elite", system-ui;
+	font-weight: 400;
+	font-style: normal;
+}
+
+punchcard {
+
+	& .background
+	{
+		background-color: var(--punchcard-beige);
+	}
+
+	& .button-br-cont
+	{
+		position: absolute;
+		right: 0;
+	}
+
+	& .input
+	{
+		background-color: transparent;
+		border: none;
+		color: var(--darker);
+
+		font-family: "Special Elite", system-ui;
+		font-weight: 400;
+		font-style: normal;
+	}
+
+	& .error
+	{
+		pointer-events: none;
+		position: absolute;
+		background-color: transparent;
+		width: 100%;
+		height: 100%;
+		z-index: 1;
+	}
+
+	& .error-inner
+	{
+		position: absolute;
+		top: 50%; left: 50%;
+		transform: rotate(22deg);
+		color: var(--red)
+	}
+
+	& .line-title
+	{
+		margin-bottom: 0.5em;
+		padding-left: 0.5em;
+		padding-right: 0.5em;
+		padding-top: 0.5em;
+		border-bottom: 1px solid var(--punchcard-beige-darker);
+		background-color: var(--punchcard-beige-dark);
+		display: flex;
+		flex-direction: row;
+	}
+
+	& .line
+	{
+		margin-bottom: 0.5em;
+		display: flex;
+		flex-direction: row;
+		align-items: flex-end;
+		height: 1.5em;
+	}
+
+	& .underline
+	{
+		border-bottom: 1px solid var(--punchcard-beige-darker);
+	}
+
+	& .cb-label
+	{
+		display: flex; flex-direction: row; align-items: flex-end;
+		margin-left: 0.5em;
+		cursor: pointer;
+	}
+
+	& .cb-label:hover
+	{
+		text-decoration: underline;
+	}
+
+	& .cb-cont
+	{
+		width: 1.5em;
+		height: 1.5em;
+		margin-left: 0.5em;
+	}
+
+	& .button
+	{
+		padding: 0em;
+	}
+
+	& .button:hover
+	{
+		text-decoration: underline;
+	}
+
+	& .punchrow
+	{
+		display: flex;
+		flex-direction: row;
+		overflow: hidden;
+		width: 100%;
+	}
+
+	& .punchrow-cont
+	{
+		display: flex;
+		flex-direction: row;
+		align-items: flex-end;
+		overflow: hidden;
+		position: relative;
+		width: 100%;
+	}
+
+	& .punchrow-bounder
+	{
+		height: 0.7em;
+		background-color: var(--punchcard-beige);
+		width: 100%;
+	}
+
+	& .punchrow-hole
+	{
+		height: 1em;
+		width: 0.4em;
+		background-color: transparent;
+	}
+
+	& .punchrow-hole-padding
+	{
+		height: 1em;
+		width: 0.4em;
+		background-color: var(--punchcard-beige);
+	}
+}
+
+machine {
+
+	& .title {
+		color: var(--metal-grey);
+		font-weight: 600;
+	}
+
+	& .bg-panel {
+		background-color: var(--metal-lighter);
+	}
+
+	& .legible {
+		background-color: var(--punchcard-beige);
+		border: 1px solid var(--brass);
+		color: black;
+	}
+
+	& .nameplate {
+		padding: 0.125em;
+		padding-left: 0.5em;
+		padding-right: 0.5em;
+		margin: 0.25em;
+		min-width: 3em;
+		text-align: center;
+
+		border-radius: 0.15em;
+	}
+	
+	& .button-nameplate {
+		padding: 0.125em;
+		padding-left: 0.5em;
+		padding-right: 0.5em;
+		border-radius: 0.15em;
+
+		margin-left: 0.5em;
+	}
+
+	& .terminal {
+					
+		background-color: var(--metal-blue-dark);
+		border-radius: 0.25em;
+		border: 1px solid var(--metal-blue);
+
+		color: white;
+		
+		display: flex;
+		flex-direction: row;
+		font-family: "IBM Mono";
+	}
+	
+	& .cb-lever-group {
+		display: flex; flex-direction: column; align-items: flex-start; margin-top: 0.5em;
+	}
+
+	& .row {
+		display: flex; flex-direction: row; 
+	}
+}
+
+/* Misc effects */
+
+
+.cog-loading-layer {
+	position: absolute;
+	width: 100%; height: 100%;
+	top: 0; left: 0;
+
+	background-color: black;
+	opacity: 0%;
+	pointer-events: none;
+	
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	transition: 0.5s;
+}
+
+.cog-loader {
+	color: var(--metal-blue);
+}
+.cog-loader,
+.cog-loader:after {
+	box-sizing: border-box;
+}
+.cog-loader {
+	display: inline-block;
+	width: 80px;
+	height: 80px;
+}
+.cog-loader:after {
+	content: " ";
+	display: block;
+	width: 64px;
+	height: 64px;
+	margin: 8px;
+	border-radius: 50%;
+	border: 6.4px solid currentColor;
+	border-color: currentColor transparent currentColor transparent;
+	animation: cog-loader 1.2s linear infinite;
+}
+@keyframes cog-loader {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}

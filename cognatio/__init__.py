@@ -21,7 +21,12 @@ all other paths, this is absolute and does not change for testing.
 """
 
 # Import the config
-cognatio_config: CognatioConfig = config.load_config(config.find_config(project_path, 'cognatio'))
+try:
+	cognatio_config: CognatioConfig = config.load_config(config.find_config(project_path, 'cognatio'))
+except ValueError as e:
+	config.generate_from_defaults("./cognatio.default.cfg", CONFIG_DEFAULTS)
+	print(f"A default config file has been placed at {os.path.abspath('./cognatio.default.cfg')}")
+	raise
 config.defaults_apply(cognatio_config, CONFIG_DEFAULTS)
 
 # Configure the logger
@@ -37,6 +42,8 @@ if not os.path.exists(env.fpath_pages):
 	filesys.mkdirs(env.fpath_pages, folder=True)
 if not os.path.exists(env.fpath_etc):
 	filesys.mkdirs(env.fpath_etc, folder=True)
+if not os.path.exists(env.fpath_static):
+	filesys.mkdirs(env.fpath_static, folder=True)
 msg = dir_nginx_check_read_accessible(env.fpath_pages)
 if msg is not None:
 	logger.warn(msg)

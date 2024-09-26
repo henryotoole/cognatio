@@ -4000,18 +4000,6 @@ var RegionSwitchyard = class extends Region {
     this._call_on_load = [];
     this._css_setup();
     this._setup_key_events();
-    this.clipboard = new Clipboard(this);
-    document.addEventListener("click", (e) => {
-      this.clipboard.deselect();
-    });
-    this._dragdata = { component: void 0 };
-    this._registered_anchors = {};
-    window.addEventListener("hashchange", (e) => {
-      this._anchor_on_hash_change(1);
-    });
-    this._anchors_ignore_next = 0;
-    this._anchor_hash_on_load = document.location.hash.replace("#", "");
-    this.anchors_disable = 0;
   }
   /**
    * Linking for a Switchyard is substantially different from regular regions. The link method
@@ -4085,7 +4073,6 @@ var RegionSwitchyard = class extends Region {
       this._loading = false;
       this.on_load_complete();
       this._call_on_load.forEach((fn) => fn());
-      this._anchor_on_hash_change(0);
       this.render();
     }).catch((e) => {
       this.on_load_failed(e);
@@ -4359,13 +4346,6 @@ var RegionSwitchyard = class extends Region {
     });
   }
   /**
-   * Return space-separated-string list of classes to apply to the tooltip $dom object. If you want to add custom classes
-   * override this function in the child app class.
-   */
-  tooltip_get_classes() {
-    return "regcss-tooltip";
-  }
-  /**
    * If specifics are not important, this can be used to automatically create and append an element to
    * the <body> of the page which can be the root region element for an ethereal region.
    * 
@@ -4383,121 +4363,6 @@ var RegionSwitchyard = class extends Region {
     for (var x = 0; x < this.subregions.length; x++) {
       this.subregions[x].deactivate();
     }
-  }
-  /**
-   * 
-   * @param {String} anchor_text The anchor text to look for
-   * @param {Region} region The instance of the region that is bound to that anchor text.
-   */
-  _register_anchor_location(anchor_text, region) {
-    if (this.anchors_disable) {
-      console.warn("Anchor not registered: " + this.anchor_text + ". Anchors are disabled for this app.");
-      return;
-    }
-    if (this._registered_anchors[anchor_text] != void 0) {
-      throw "Anchor " + anchor_text + " is already registered.";
-    }
-    this._registered_anchors[anchor_text] = region.id;
-  }
-  /**
-   * Called when a region that has anchors enabled has its _anchor_activate() function called.
-   */
-  _anchor_on_region_anchor_activate() {
-    if (this.anchors_disable) return;
-    this._anchors_ignore_next = 1;
-  }
-  /**
-   * Called when the url anchor changes. This includes the inital load of the page.
-   * 
-   * @param {Boolean} reload_on_blank Whether to initiate a reload if the 
-   */
-  _anchor_on_hash_change(reload_on_blank) {
-    if (this.anchors_disable) return;
-    if (this._anchors_ignore_next) {
-      this._anchors_ignore_next = 0;
-      return;
-    }
-    var current_anchor_text = document.location.hash.replace("#", "");
-    if (this._anchor_hash_on_load) {
-      current_anchor_text = this._anchor_hash_on_load;
-      this._anchor_hash_on_load = void 0;
-    }
-    if (current_anchor_text == "") {
-      if (reload_on_blank) {
-        document.location.reload();
-      }
-    } else {
-      this.deactivate_all();
-      var anchor_reg = this.r[this._registered_anchors[current_anchor_text]];
-      if (anchor_reg == void 0) {
-        console.error("Anchor path " + current_anchor_text + " has no region associated with it.");
-        document.location.hash = "";
-      } else {
-        anchor_reg.anchor.setup_fn();
-      }
-    }
-  }
-  /**
-   * Setup a comonent-$dom combo as draggable. Under the current system, there *must* be a component
-   * tied to a $dom for it to be draggable.
-   * @param {JQuery object} $dom The html object to be made draggable
-   * @param {Component} component Instance of the component tied to this $dom
-   * @param {Function} dragstart_fn OPTIONAL Function to be called on dragstart to set any special data,
-   * provided with args: fn(e, component, $dom_comp)
-   * @param {Function} dragend_fn OPTIONAL Function to be called on dragend to ensure cleanup,
-   * provided with args: fn(e, component, $dom_comp)
-   */
-  bind_draggable($dom, component, dragstart_fn, dragend_fn) {
-    $dom.attr("draggable", "true");
-    $dom.on("dragstart", function(e) {
-      e.stopPropagation();
-      this._dragdata.component = component;
-      this._dragdata.$dom = $dom;
-      this._dragdata.counter = 0;
-      if (dragstart_fn) dragstart_fn(e, component, $dom);
-    }.bind(this)).on("dragend", function(e) {
-      if (dragend_fn) dragend_fn(e, this._dragdata.component, this._dragdata.$dom);
-      e.stopPropagation();
-      this._dragdata.component = void 0;
-      this._dragdata.$dom = void 0;
-      this._dragdata.counter = 0;
-    }.bind(this));
-  }
-  /**
-   * 
-   * @param {JQuery object} $dom The html region that an object can be dropped
-   * @param {String} class_name A css class to be added to $dom on dragenter and removed on dragleave
-   * @param {Function} catch_dropped_fn The function to be executed when the object is dropped. This function is
-   * provided with args: fn(e, dropped_component, $dom_dropped)
-   * @param {Function} dragover_fn OPTIONAL Function to be called every dragover event,
-   * provided with args: fn(e, dropped_component, $dom_dragging)
-   */
-  bind_catchable($dom, class_name, catch_dropped_fn, dragover_fn) {
-    $dom.on("drop", function(e) {
-      $dom.removeClass(class_name);
-      catch_dropped_fn(e, this._dragdata.component, this._dragdata.$dom);
-      e.preventDefault();
-    }.bind(this)).on("dragenter", function(e) {
-      $dom.addClass(class_name);
-      this._dragdata.counter++;
-    }.bind(this)).on("dragleave", function(e) {
-      this._dragdata.counter--;
-      if (this._dragdata.counter === 0) {
-        $dom.removeClass(class_name);
-      }
-    }.bind(this)).on("dragover", (e) => {
-      e.preventDefault();
-      if (dragover_fn) dragover_fn(e, this._dragdata.component, this._dragdata.$dom);
-    });
-  }
-  /**
-   * Unbind all drag/catch behaviors from the provided $dom
-   * 
-   *  @param {JQuery object} $dom
-   */
-  unbind_both($dom) {
-    $dom.off("drop").off("dragenter").off("dragleave").off("dragover").off("dragstart").off("dragend");
-    $dom.attr("draggable", "false");
   }
 };
 export {

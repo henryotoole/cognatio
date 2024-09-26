@@ -330,7 +330,7 @@ class RegResources extends Region
 		let html = /* html */`
 		<filebox rfm_member='filebox'>
 			<button rfm_member='icon_cont' class='icon-cont'>
-				<img rfm_member='icon' class='icon' src='/s/assets/icons/file_upload.svg'>
+				<img rfm_member='icon' class='icon' src='/nav/assets/icons/file_upload.svg'>
 			</button>
 			<div class='label-cont'>
 				<div class='label'>

@@ -1,11 +1,50 @@
 // cognatio/web/client/navigator/src/lib/regional.js
+var __defProp = Object.defineProperty;
+var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+function blob_md5(blob) {
+  return new Promise((res, rej) => {
+    blob.arrayBuffer().then((bbytes) => {
+      res(
+        hex_md5(
+          binl2rstr(
+            binl_md5(bbytes)
+          )
+        )
+      );
+    });
+  });
+}
+__name(blob_md5, "blob_md5");
+var hexcase = 0;
 var b64pad = "";
+function hex_md5(s) {
+  return rstr2hex(rstr_md5(str2rstr_utf8(s)));
+}
+__name(hex_md5, "hex_md5");
 function b64_md5(s) {
   return rstr2b64(rstr_md5(str2rstr_utf8(s)));
 }
+__name(b64_md5, "b64_md5");
 function rstr_md5(s) {
   return binl2rstr(binl_md5(rstr2binl(s), s.length * 8));
 }
+__name(rstr_md5, "rstr_md5");
+function rstr2hex(input) {
+  try {
+    hexcase;
+  } catch (e) {
+    hexcase = 0;
+  }
+  var hex_tab = hexcase ? "0123456789ABCDEF" : "0123456789abcdef";
+  var output = "";
+  var x;
+  for (var i = 0; i < input.length; i++) {
+    x = input.charCodeAt(i);
+    output += hex_tab.charAt(x >>> 4 & 15) + hex_tab.charAt(x & 15);
+  }
+  return output;
+}
+__name(rstr2hex, "rstr2hex");
 function rstr2b64(input) {
   try {
     b64pad;
@@ -24,6 +63,7 @@ function rstr2b64(input) {
   }
   return output;
 }
+__name(rstr2b64, "rstr2b64");
 function str2rstr_utf8(input) {
   var output = "";
   var i = -1;
@@ -58,6 +98,7 @@ function str2rstr_utf8(input) {
   }
   return output;
 }
+__name(str2rstr_utf8, "str2rstr_utf8");
 function rstr2binl(input) {
   var output = Array(input.length >> 2);
   for (var i = 0; i < output.length; i++)
@@ -66,12 +107,14 @@ function rstr2binl(input) {
     output[i >> 5] |= (input.charCodeAt(i / 8) & 255) << i % 32;
   return output;
 }
+__name(rstr2binl, "rstr2binl");
 function binl2rstr(input) {
   var output = "";
   for (var i = 0; i < input.length * 32; i += 8)
     output += String.fromCharCode(input[i >> 5] >>> i % 32 & 255);
   return output;
 }
+__name(binl2rstr, "binl2rstr");
 function binl_md5(x, len) {
   x[len >> 5] |= 128 << len % 32;
   x[(len + 64 >>> 9 << 4) + 14] = len;
@@ -155,29 +198,58 @@ function binl_md5(x, len) {
   }
   return Array(a, b, c, d);
 }
+__name(binl_md5, "binl_md5");
 function md5_cmn(q, a, b, x, s, t) {
   return safe_add(bit_rol(safe_add(safe_add(a, q), safe_add(x, t)), s), b);
 }
+__name(md5_cmn, "md5_cmn");
 function md5_ff(a, b, c, d, x, s, t) {
   return md5_cmn(b & c | ~b & d, a, b, x, s, t);
 }
+__name(md5_ff, "md5_ff");
 function md5_gg(a, b, c, d, x, s, t) {
   return md5_cmn(b & d | c & ~d, a, b, x, s, t);
 }
+__name(md5_gg, "md5_gg");
 function md5_hh(a, b, c, d, x, s, t) {
   return md5_cmn(b ^ c ^ d, a, b, x, s, t);
 }
+__name(md5_hh, "md5_hh");
 function md5_ii(a, b, c, d, x, s, t) {
   return md5_cmn(c ^ (b | ~d), a, b, x, s, t);
 }
+__name(md5_ii, "md5_ii");
 function safe_add(x, y) {
   var lsw = (x & 65535) + (y & 65535);
   var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
   return msw << 16 | lsw & 65535;
 }
+__name(safe_add, "safe_add");
 function bit_rol(num2, cnt) {
   return num2 << cnt | num2 >>> 32 - cnt;
 }
+__name(bit_rol, "bit_rol");
+function sentry_setup(dev_mode, sentry_url) {
+  if (!dev_mode) {
+    console.log("Starting browser in non-development mode. Launching SentryIO");
+    Sentry.init({ dsn: sentry_url });
+  } else {
+    console.log("Starting browser in development mode");
+  }
+}
+__name(sentry_setup, "sentry_setup");
+function bindify_console() {
+  console.todo = function(msg) {
+    console.log("%c//TODO: " + msg, "color: #6a9955");
+  };
+}
+__name(bindify_console, "bindify_console");
+function bindify_number() {
+  Number.prototype.clamp = function(min, max) {
+    return Math.min(Math.max(this, min), max);
+  };
+}
+__name(bindify_number, "bindify_number");
 function generate_hash() {
   var result = "";
   var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -187,25 +259,35 @@ function generate_hash() {
   }
   return result;
 }
+__name(generate_hash, "generate_hash");
 function checksum_json(data2) {
   return b64_md5(JSON.stringify(data2));
 }
+__name(checksum_json, "checksum_json");
 function validate_email(email) {
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
 }
+__name(validate_email, "validate_email");
+function download_file(src_url, file_name) {
+  var $dl = $("<a></a>").attr("href", src_url).attr("download", file_name == void 0 ? "download_file" : file_name).css("display", "none");
+  $("body").append($dl);
+  $dl.get(0).click();
+}
+__name(download_file, "download_file");
 function str_locations(substring, string) {
   var a = [], i = -1;
   while ((i = string.indexOf(substring, i + 1)) >= 0) a.push(i);
   return a;
 }
+__name(str_locations, "str_locations");
 function serial_promises(promise_fns) {
   if (promise_fns[0] instanceof Promise) throw new Error(
     "serial_promises() takes a list of functions that return promises, not a list of actual promises."
   );
   let out_list = [];
   return new Promise((res, rej) => {
-    let fn = (index) => {
+    let fn = /* @__PURE__ */ __name((index) => {
       promise_fns[index]().then((out2) => {
         out_list.push(out2);
         if (index + 1 < promise_fns.length) {
@@ -214,16 +296,18 @@ function serial_promises(promise_fns) {
           res(out_list);
         }
       });
-    };
+    }, "fn");
     fn(0);
   });
 }
+__name(serial_promises, "serial_promises");
 function path_ext(fpath) {
   let name = fpath.split("/").pop();
   if (name.indexOf(".") == -1) return void 0;
   let ext = name.split(".").pop();
   return ext;
 }
+__name(path_ext, "path_ext");
 var _throttle_memspace = {};
 function throttle_leading(min_delay_ms, fn) {
   const fnid = generate_hash();
@@ -236,9 +320,264 @@ function throttle_leading(min_delay_ms, fn) {
     }
   };
 }
+__name(throttle_leading, "throttle_leading");
 function linterp(x1, x2, y1, y2, x) {
   return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
 }
+__name(linterp, "linterp");
+var ColorUtil = class _ColorUtil {
+  static {
+    __name(this, "ColorUtil");
+  }
+  /**
+   * Tries to convert a color name to rgb/a hex representation
+   * @param name
+   * @returns {string | CanvasGradient | CanvasPattern}
+   */
+  static standardizeColor(name) {
+    if (name.toLowerCase() === "black") {
+      return "#000";
+    }
+    const ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = name;
+    return ctx.fillStyle === "#000" ? null : ctx.fillStyle;
+  }
+  /**
+   * Convert HSV spectrum to RGB.
+   * @param h Hue
+   * @param s Saturation
+   * @param v Value
+   * @returns {number[]} Array with rgb values.
+   */
+  static hsvToRgb(h, s, v) {
+    h = h / 360 * 6;
+    s /= 100;
+    v /= 100;
+    const i = floor(h);
+    const f = h - i;
+    const p = v * (1 - s);
+    const q = v * (1 - f * s);
+    const t = v * (1 - (1 - f) * s);
+    const mod = i % 6;
+    const r = [v, q, p, p, t, v][mod];
+    const g = [t, v, v, q, p, p][mod];
+    const b = [p, p, t, v, v, q][mod];
+    return [
+      r * 255,
+      g * 255,
+      b * 255
+    ];
+  }
+  /**
+   * Convert HSV spectrum to Hex.
+   * @param h Hue
+   * @param s Saturation
+   * @param v Value
+   * @returns {string[]} Hex values
+   */
+  static hsvToHex(h, s, v) {
+    return _ColorUtil.hsvToRgb(h, s, v).map(
+      (v2) => round(v2).toString(16).padStart(2, "0")
+    );
+  }
+  /**
+   * Convert HSV spectrum to CMYK.
+   * @param h Hue
+   * @param s Saturation
+   * @param v Value
+   * @returns {number[]} CMYK values
+   */
+  static hsvToCmyk(h, s, v) {
+    const rgb = _ColorUtil.hsvToRgb(h, s, v);
+    const r = rgb[0] / 255;
+    const g = rgb[1] / 255;
+    const b = rgb[2] / 255;
+    const k = Math.min(1 - r, 1 - g, 1 - b);
+    const c = k === 1 ? 0 : (1 - r - k) / (1 - k);
+    const m = k === 1 ? 0 : (1 - g - k) / (1 - k);
+    const y = k === 1 ? 0 : (1 - b - k) / (1 - k);
+    return [
+      c * 100,
+      m * 100,
+      y * 100,
+      k * 100
+    ];
+  }
+  /**
+   * Convert HSV spectrum to HSL.
+   * @param h Hue
+   * @param s Saturation
+   * @param v Value
+   * @returns {number[]} HSL values
+   */
+  static hsvToHsl(h, s, v) {
+    s /= 100;
+    v /= 100;
+    const l = (2 - s) * v / 2;
+    if (l !== 0) {
+      if (l === 1) {
+        s = 0;
+      } else if (l < 0.5) {
+        s = s * v / (l * 2);
+      } else {
+        s = s * v / (2 - l * 2);
+      }
+    }
+    return [
+      h,
+      s * 100,
+      l * 100
+    ];
+  }
+  /**
+   * Convert RGB to HSV.
+   * @param r Red
+   * @param g Green
+   * @param b Blue
+   * @return {number[]} HSV values.
+   */
+  static rgbToHsv(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    const minVal = Math.min(r, g, b);
+    const maxVal = Math.max(r, g, b);
+    const delta = maxVal - minVal;
+    let h, s;
+    const v = maxVal;
+    if (delta === 0) {
+      h = s = 0;
+    } else {
+      s = delta / maxVal;
+      const dr = ((maxVal - r) / 6 + delta / 2) / delta;
+      const dg = ((maxVal - g) / 6 + delta / 2) / delta;
+      const db = ((maxVal - b) / 6 + delta / 2) / delta;
+      if (r === maxVal) {
+        h = db - dg;
+      } else if (g === maxVal) {
+        h = 1 / 3 + dr - db;
+      } else if (b === maxVal) {
+        h = 2 / 3 + dg - dr;
+      }
+      if (h < 0) {
+        h += 1;
+      } else if (h > 1) {
+        h -= 1;
+      }
+    }
+    return [
+      h * 360,
+      s * 100,
+      v * 100
+    ];
+  }
+  /**
+   * Convert CMYK to HSV.
+   * @param c Cyan
+   * @param m Magenta
+   * @param y Yellow
+   * @param k Key (Black)
+   * @return {number[]} HSV values.
+   */
+  static cmykToHsv(c, m, y, k) {
+    c /= 100;
+    m /= 100;
+    y /= 100;
+    k /= 100;
+    const r = (1 - Math.min(1, c * (1 - k) + k)) * 255;
+    const g = (1 - Math.min(1, m * (1 - k) + k)) * 255;
+    const b = (1 - Math.min(1, y * (1 - k) + k)) * 255;
+    return [..._ColorUtil.rgbToHsv(r, g, b)];
+  }
+  /**
+   * Convert HSL to HSV.
+   * @param h Hue
+   * @param s Saturation
+   * @param l Lightness
+   * @return {number[]} HSV values.
+   */
+  static hslToHsv(h, s, l) {
+    s /= 100;
+    l /= 100;
+    s *= l < 0.5 ? l : 1 - l;
+    const ns = 2 * s / (l + s) * 100;
+    const v = (l + s) * 100;
+    return [h, isNaN(ns) ? 0 : ns, v];
+  }
+  /**
+   * Convert HEX to HSV.
+   * @param hex Hexadecimal string of rgb colors, can have length 3 or 6.
+   * @return {number[]} HSV values.
+   */
+  static hexToHsv(hex) {
+    return _ColorUtil.rgbToHsv(...hex.match(/.{2}/g).map((v) => parseInt(v, 16)));
+  }
+  /**
+   * Try's to parse a string which represents a color to a HSV array.
+   * Current supported types are cmyk, rgba, hsla and hexadecimal.
+   * @param str
+   * @return {*}
+   */
+  static parseToHSVA(str) {
+    str = str.match(/^[a-zA-Z]+$/) ? _ColorUtil.standardizeColor(str) : str;
+    const regex = {
+      cmyk: /^cmyk[\D]+([\d.]+)[\D]+([\d.]+)[\D]+([\d.]+)[\D]+([\d.]+)/i,
+      rgba: /^((rgba)|rgb)[\D]+([\d.]+)[\D]+([\d.]+)[\D]+([\d.]+)[\D]*?([\d.]+|$)/i,
+      hsla: /^((hsla)|hsl)[\D]+([\d.]+)[\D]+([\d.]+)[\D]+([\d.]+)[\D]*?([\d.]+|$)/i,
+      hsva: /^((hsva)|hsv)[\D]+([\d.]+)[\D]+([\d.]+)[\D]+([\d.]+)[\D]*?([\d.]+|$)/i,
+      hexa: /^#?(([\dA-Fa-f]{3,4})|([\dA-Fa-f]{6})|([\dA-Fa-f]{8}))$/i
+    };
+    const numarize = /* @__PURE__ */ __name((array) => array.map((v) => /^(|\d+)\.\d+|\d+$/.test(v) ? Number(v) : void 0), "numarize");
+    let match;
+    invalid: for (const type in regex) {
+      if (!(match = regex[type].exec(str))) {
+        continue;
+      }
+      const alphaValid = /* @__PURE__ */ __name((a) => !!match[2] === (typeof a === "number"), "alphaValid");
+      switch (type) {
+        case "cmyk": {
+          const [, c, m, y, k] = numarize(match);
+          if (c > 100 || m > 100 || y > 100 || k > 100) {
+            break invalid;
+          }
+          return { values: _ColorUtil.cmykToHsv(c, m, y, k), type };
+        }
+        case "rgba": {
+          const [, , , r, g, b, a] = numarize(match);
+          if (r > 255 || g > 255 || b > 255 || a < 0 || a > 1 || !alphaValid(a)) {
+            break invalid;
+          }
+          return { values: [..._ColorUtil.rgbToHsv(r, g, b), a], a, type };
+        }
+        case "hexa": {
+          let [, hex] = match;
+          if (hex.length === 4 || hex.length === 3) {
+            hex = hex.split("").map((v) => v + v).join("");
+          }
+          const raw = hex.substring(0, 6);
+          let a = hex.substring(6);
+          a = a ? parseInt(a, 16) / 255 : void 0;
+          return { values: [..._ColorUtil.hexToHsv(raw), a], a, type };
+        }
+        case "hsla": {
+          const [, , , h, s, l, a] = numarize(match);
+          if (h > 360 || s > 100 || l > 100 || a < 0 || a > 1 || !alphaValid(a)) {
+            break invalid;
+          }
+          return { values: [..._ColorUtil.hslToHsv(h, s, l), a], a, type };
+        }
+        case "hsva": {
+          const [, , , h, s, v, a] = numarize(match);
+          if (h > 360 || s > 100 || v > 100 || a < 0 || a > 1 || !alphaValid(a)) {
+            break invalid;
+          }
+          return { values: [h, s, v, a], a, type };
+        }
+      }
+    }
+    return { values: null, type: null };
+  }
+};
 function css_selector_exists(rule_or_selector) {
   let selector = rule_or_selector;
   if (rule_or_selector.indexOf("{") != -1) {
@@ -263,6 +602,7 @@ function css_selector_exists(rule_or_selector) {
   }
   return false;
 }
+__name(css_selector_exists, "css_selector_exists");
 function css_inject(rule) {
   let regss;
   document.adoptedStyleSheets.forEach((ss) => {
@@ -275,7 +615,29 @@ function css_inject(rule) {
   }
   regss.insertRule(rule, regss.cssRules.length);
 }
+__name(css_inject, "css_inject");
+function css_format_as_rule(selector, style_data, nested) {
+  let style_line = selector + " {";
+  for (const [propname, propval] of Object.entries(style_data)) {
+    style_line += propname + ": " + propval + ";";
+  }
+  if (nested) {
+    for (const [nested_selector, nested_style_obj] of Object.entries(nested)) {
+      style_line += "& " + nested_selector + " {";
+      for (const [nested_propname, nested_propval] of Object.entries(nested_style_obj)) {
+        style_line += nested_propname + ": " + nested_propval + ";";
+      }
+      style_line += "}";
+    }
+  }
+  style_line += "}";
+  return style_line;
+}
+__name(css_format_as_rule, "css_format_as_rule");
 var Clipboard = class {
+  static {
+    __name(this, "Clipboard");
+  }
   /**
    * Setup the app-wide clipboard and selection. Only components can be copied to the clipboard.
    */
@@ -294,8 +656,8 @@ var Clipboard = class {
     this.selection = {
       components: [],
       // The components currently selected (not copies, instances)
-      callback: () => {
-      }
+      callback: /* @__PURE__ */ __name(() => {
+      }, "callback")
       // Called when a selection is performed
     };
     this.selection_locked = 0;
@@ -471,6 +833,9 @@ var Clipboard = class {
   }
 };
 var RHElement = class _RHElement extends HTMLElement {
+  static {
+    __name(this, "RHElement");
+  }
   // Typehint declarations.
   /** @description Add a custom place to put data, tied to only one key to prevent collisions. */
   _reg_ds = {
@@ -570,6 +935,9 @@ var RHElement = class _RHElement extends HTMLElement {
   }
 };
 var Fabricator = class {
+  static {
+    __name(this, "Fabricator");
+  }
   /**
    * Instantiate a new Fabricator instance with the provided HTML.
    * 
@@ -746,23 +1114,29 @@ var Fabricator = class {
    * Investigate this.dom to discover all 'rfm_members' within. This will populate this._members.
    */
   _members_discover() {
-    let traverse = (el) => {
+    let traverse = /* @__PURE__ */ __name((el) => {
       for (const child of el.children) {
         if (child.hasAttribute("rfm_member")) {
           this._members[child.getAttribute("rfm_member")] = RHElement.wrap(child);
         }
         traverse(child);
       }
-    };
+    }, "traverse");
     traverse(this._dom.body);
   }
 };
 var RegionalStructureError = class extends Error {
+  static {
+    __name(this, "RegionalStructureError");
+  }
   constructor(message, options) {
     super(message, options);
   }
 };
 var FabricatorError = class extends Error {
+  static {
+    __name(this, "FabricatorError");
+  }
   /**
    * Create a new fabricator error.
    * @param {string} message Message to print
@@ -773,7 +1147,18 @@ var FabricatorError = class extends Error {
     this.fab = fab;
   }
 };
+var TODOError2 = class extends Error {
+  static {
+    __name(this, "TODOError");
+  }
+  constructor(message, options) {
+    super(message, options);
+  }
+};
 var Component = class {
+  static {
+    __name(this, "Component");
+  }
   /** @type {*} The ID for the record this component models. */
   id;
   /** @type {DHTabular} The datahandler from which this component originated */
@@ -835,6 +1220,9 @@ var Component = class {
   }
 };
 var DataHandler = class {
+  static {
+    __name(this, "DataHandler");
+  }
   /** @type {Object} This is where all local data for this DataHandler is stored. */
   _data;
   /**
@@ -910,6 +1298,9 @@ var DataHandler = class {
   }
 };
 var DHTabular = class extends DataHandler {
+  static {
+    __name(this, "DHTabular");
+  }
   /** @type {Object} A place for local 'settings' to tie to a record */
   _settings;
   /**
@@ -1043,6 +1434,9 @@ var JSON_HEADERS = {
   "Content-Type": "application/json"
 };
 var ErrorREST = class extends Error {
+  static {
+    __name(this, "ErrorREST");
+  }
   /**
    * Construct an error to raise when a REST operation fails. This will just auto-format the error message
    * and add specified fields to the error for upstream reading.
@@ -1061,6 +1455,9 @@ var ErrorREST = class extends Error {
   }
 };
 var DHREST = class extends DHTabular {
+  static {
+    __name(this, "DHREST");
+  }
   /** @type {URL} The url at which access to this API is made */
   api_url;
   /** @type {Array} The currently-tracked ID's for this datahandler instance */
@@ -1654,6 +2051,9 @@ var DHREST = class extends DHTabular {
   }
 };
 var Region = class _Region {
+  static {
+    __name(this, "Region");
+  }
   /** Get how long the mouse must hover over a tooltip to show it, in seconds.*/
   static get tooltip_hover_time() {
     return 2;
@@ -2177,6 +2577,9 @@ var Region = class _Region {
   }
 };
 var RegOneChoice = class extends Region {
+  static {
+    __name(this, "RegOneChoice");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -2282,6 +2685,9 @@ var RegOneChoice = class extends Region {
   }
 };
 var RegTwoChoice = class extends Region {
+  static {
+    __name(this, "RegTwoChoice");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -2410,6 +2816,9 @@ var RegTwoChoice = class extends Region {
   }
 };
 var RegIn = class extends Region {
+  static {
+    __name(this, "RegIn");
+  }
   /** @type {Number} If undefined, debouncer is disabled. If defined, the debouncer duration in seconds. */
   _debouncer_duration;
   /** @type {Boolean} The number of debouncing actions that have occured within the operation */
@@ -2636,6 +3045,9 @@ var RegIn = class extends Region {
   }
 };
 var RegInInput = class extends RegIn {
+  static {
+    __name(this, "RegInInput");
+  }
   /** @type {RHElement} The input tag reference */
   input;
   fab_get() {
@@ -2719,6 +3131,9 @@ var RegInInput = class extends RegIn {
   }
 };
 var RegInCheckbox = class extends RegIn {
+  static {
+    __name(this, "RegInCheckbox");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -2787,6 +3202,9 @@ var RegInCheckbox = class extends RegIn {
   }
 };
 var RadioGroup = class {
+  static {
+    __name(this, "RadioGroup");
+  }
   /** @type {RegionSwitchyard} */
   swyd;
   /**
@@ -2900,6 +3318,9 @@ var RadioGroup = class {
   }
 };
 var RegInTextArea = class _RegInTextArea extends RegIn {
+  static {
+    __name(this, "RegInTextArea");
+  }
   /** @type {RHElement} */
   textarea;
   /** @type {Boolean} Whether or not the more complex tab-behavior is enabled. */
@@ -3203,6 +3624,9 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
   }
 };
 var DispatchClientJS = class {
+  static {
+    __name(this, "DispatchClientJS");
+  }
   /**
    * Initialize a dispatch client which can communicate with a central dispatch server. This client will be assigned
    * a unique session id and all requests to the server will have this ID associated with it.
@@ -3487,6 +3911,9 @@ var DispatchClientJS = class {
   }
 };
 var RegionSwitchyard = class extends Region {
+  static {
+    __name(this, "RegionSwitchyard");
+  }
   /**
    * Instantiate a new Switchyard region. A webapp should have only one instance of this for a page at
    * a time.
@@ -3534,18 +3961,6 @@ var RegionSwitchyard = class extends Region {
     this._call_on_load = [];
     this._css_setup();
     this._setup_key_events();
-    this.clipboard = new Clipboard(this);
-    document.addEventListener("click", (e) => {
-      this.clipboard.deselect();
-    });
-    this._dragdata = { component: void 0 };
-    this._registered_anchors = {};
-    window.addEventListener("hashchange", (e) => {
-      this._anchor_on_hash_change(1);
-    });
-    this._anchors_ignore_next = 0;
-    this._anchor_hash_on_load = document.location.hash.replace("#", "");
-    this.anchors_disable = 0;
   }
   /**
    * Linking for a Switchyard is substantially different from regular regions. The link method
@@ -3893,13 +4308,6 @@ var RegionSwitchyard = class extends Region {
     });
   }
   /**
-   * Return space-separated-string list of classes to apply to the tooltip $dom object. If you want to add custom classes
-   * override this function in the child app class.
-   */
-  tooltip_get_classes() {
-    return "regcss-tooltip";
-  }
-  /**
    * If specifics are not important, this can be used to automatically create and append an element to
    * the <body> of the page which can be the root region element for an ethereal region.
    * 
@@ -3917,121 +4325,6 @@ var RegionSwitchyard = class extends Region {
     for (var x = 0; x < this.subregions.length; x++) {
       this.subregions[x].deactivate();
     }
-  }
-  /**
-   * 
-   * @param {String} anchor_text The anchor text to look for
-   * @param {Region} region The instance of the region that is bound to that anchor text.
-   */
-  _register_anchor_location(anchor_text, region) {
-    if (this.anchors_disable) {
-      console.warn("Anchor not registered: " + this.anchor_text + ". Anchors are disabled for this app.");
-      return;
-    }
-    if (this._registered_anchors[anchor_text] != void 0) {
-      throw "Anchor " + anchor_text + " is already registered.";
-    }
-    this._registered_anchors[anchor_text] = region.id;
-  }
-  /**
-   * Called when a region that has anchors enabled has its _anchor_activate() function called.
-   */
-  _anchor_on_region_anchor_activate() {
-    if (this.anchors_disable) return;
-    this._anchors_ignore_next = 1;
-  }
-  /**
-   * Called when the url anchor changes. This includes the inital load of the page.
-   * 
-   * @param {Boolean} reload_on_blank Whether to initiate a reload if the 
-   */
-  _anchor_on_hash_change(reload_on_blank) {
-    if (this.anchors_disable) return;
-    if (this._anchors_ignore_next) {
-      this._anchors_ignore_next = 0;
-      return;
-    }
-    var current_anchor_text = document.location.hash.replace("#", "");
-    if (this._anchor_hash_on_load) {
-      current_anchor_text = this._anchor_hash_on_load;
-      this._anchor_hash_on_load = void 0;
-    }
-    if (current_anchor_text == "") {
-      if (reload_on_blank) {
-        document.location.reload();
-      }
-    } else {
-      this.deactivate_all();
-      var anchor_reg = this.r[this._registered_anchors[current_anchor_text]];
-      if (anchor_reg == void 0) {
-        console.error("Anchor path " + current_anchor_text + " has no region associated with it.");
-        document.location.hash = "";
-      } else {
-        anchor_reg.anchor.setup_fn();
-      }
-    }
-  }
-  /**
-   * Setup a comonent-$dom combo as draggable. Under the current system, there *must* be a component
-   * tied to a $dom for it to be draggable.
-   * @param {JQuery object} $dom The html object to be made draggable
-   * @param {Component} component Instance of the component tied to this $dom
-   * @param {Function} dragstart_fn OPTIONAL Function to be called on dragstart to set any special data,
-   * provided with args: fn(e, component, $dom_comp)
-   * @param {Function} dragend_fn OPTIONAL Function to be called on dragend to ensure cleanup,
-   * provided with args: fn(e, component, $dom_comp)
-   */
-  bind_draggable($dom, component, dragstart_fn, dragend_fn) {
-    $dom.attr("draggable", "true");
-    $dom.on("dragstart", function(e) {
-      e.stopPropagation();
-      this._dragdata.component = component;
-      this._dragdata.$dom = $dom;
-      this._dragdata.counter = 0;
-      if (dragstart_fn) dragstart_fn(e, component, $dom);
-    }.bind(this)).on("dragend", function(e) {
-      if (dragend_fn) dragend_fn(e, this._dragdata.component, this._dragdata.$dom);
-      e.stopPropagation();
-      this._dragdata.component = void 0;
-      this._dragdata.$dom = void 0;
-      this._dragdata.counter = 0;
-    }.bind(this));
-  }
-  /**
-   * 
-   * @param {JQuery object} $dom The html region that an object can be dropped
-   * @param {String} class_name A css class to be added to $dom on dragenter and removed on dragleave
-   * @param {Function} catch_dropped_fn The function to be executed when the object is dropped. This function is
-   * provided with args: fn(e, dropped_component, $dom_dropped)
-   * @param {Function} dragover_fn OPTIONAL Function to be called every dragover event,
-   * provided with args: fn(e, dropped_component, $dom_dragging)
-   */
-  bind_catchable($dom, class_name, catch_dropped_fn, dragover_fn) {
-    $dom.on("drop", function(e) {
-      $dom.removeClass(class_name);
-      catch_dropped_fn(e, this._dragdata.component, this._dragdata.$dom);
-      e.preventDefault();
-    }.bind(this)).on("dragenter", function(e) {
-      $dom.addClass(class_name);
-      this._dragdata.counter++;
-    }.bind(this)).on("dragleave", function(e) {
-      this._dragdata.counter--;
-      if (this._dragdata.counter === 0) {
-        $dom.removeClass(class_name);
-      }
-    }.bind(this)).on("dragover", (e) => {
-      e.preventDefault();
-      if (dragover_fn) dragover_fn(e, this._dragdata.component, this._dragdata.$dom);
-    });
-  }
-  /**
-   * Unbind all drag/catch behaviors from the provided $dom
-   * 
-   *  @param {JQuery object} $dom
-   */
-  unbind_both($dom) {
-    $dom.off("drop").off("dragenter").off("dragleave").off("dragover").off("dragstart").off("dragend");
-    $dom.attr("draggable", "false");
   }
 };
 
@@ -4625,6 +4918,40 @@ var RegSWNav = class extends RegionSwitchyard {
     if (user_id == void 0) return Promise.resolve();
     this.dh_user.track_ids([user_id]);
     return this.dh_user.pull();
+  }
+  /**
+   * Check an error that results from a request-based operation to see if the user merely needs to login.
+   * If the error is in fact a 403 (indicating a login is needed) present the user with a one or twochoice
+   * that tells them they need to login, or login to a different account.
+   * 
+   * @param {Error} e The error that was caught
+   * @param {String} title The title of the overlays that pops up. Should indicate the action attempted. Optional.
+   * 
+   * @returns {Promise} that reject immediately if not auth error or resolve when the user takes action otherwise
+   */
+  async prompt_login(e, title) {
+    title = title || "Action Not Authorized";
+    if (e instanceof ErrorREST && e.data.http_code == 403 || e.code == 403) {
+      let prom;
+      if (this.swyd.settings.user_id == void 0) {
+        prom = this.swyd.reg_two_choice.present_choice(
+          title,
+          "Authorization is required to perform this action, and you are not logged into an account. Would you like to sign in?",
+          "Go Back",
+          "Log In"
+        ).then(() => {
+          this.swyd.reg_login.activate();
+        });
+      } else {
+        prom = this.swyd.reg_one_choice.present_message(
+          title,
+          "Your user account is not authorized to perform this action."
+        );
+      }
+      return prom;
+    } else {
+      return Promise.resolve();
+    }
   }
   _create_subregions() {
     this.reg_loading = new RegLoading().fab().link(this, document.getElementById("reg_loading"));
@@ -5601,6 +5928,9 @@ var RegEditor = class extends Region {
       }).then(() => {
         this.swyd.render(true);
         res();
+      }).catch((e) => {
+        this.swyd.prompt_login(e, "Page Alteration Not Authorized");
+        throw e;
       });
     });
   }
@@ -5906,7 +6236,7 @@ var RegResources = class extends Region {
       `
 		<filebox rfm_member='filebox'>
 			<button rfm_member='icon_cont' class='icon-cont'>
-				<img rfm_member='icon' class='icon' src='/s/assets/icons/file_upload.svg'>
+				<img rfm_member='icon' class='icon' src='/nav/assets/icons/file_upload.svg'>
 			</button>
 			<div class='label-cont'>
 				<div class='label'>
@@ -6456,25 +6786,9 @@ var RegNewPage = class _RegNewPage extends Region {
       }).then(() => {
         res();
       }).catch((e) => {
-        if (e instanceof ErrorREST && e.data.http_code == 403) {
-          let prom;
-          if (this.swyd.settings.user_id == void 0) {
-            prom = this.swyd.reg_two_choice.present_choice(
-              "Page Creation Not Authorized",
-              "Authorization is required to create a page, and you are not logged into an account. Would you like to sign in?",
-              "Go Back",
-              "Log In"
-            ).then(() => {
-              this.swyd.reg_login.activate();
-            });
-          } else {
-            prom = this.swyd.reg_one_choice.present_message(
-              "Page Access Not Authorized",
-              "Your user account is not authorized to create pages."
-            );
-          }
+        this.swyd.prompt_login(e, "Page Creation Not Authorized").then(() => {
           this.deactivate();
-        }
+        });
         throw e;
       });
     });
@@ -7879,10 +8193,10 @@ var icon_map = {
   "jpg": "self",
   "jpeg": "self",
   "svg": "self",
-  "txt": "/s/assets/icons/file_text.svg",
-  "md": "/s/assets/icons/file_text.svg",
-  "log": "/s/assets/icons/file_text.svg",
-  "unknown": "/s/assets/icons/file_unknown.svg"
+  "txt": "/nav/assets/icons/file_text.svg",
+  "md": "/nav/assets/icons/file_text.svg",
+  "log": "/nav/assets/icons/file_text.svg",
+  "unknown": "/nav/assets/icons/file_unknown.svg"
 };
 var CompFile = class extends Component {
   /**
@@ -7990,6 +8304,21 @@ var DHPageContent = class extends DataHandler {
     this.swyd = swyd;
   }
   /**
+   * Some notes on source code:
+   * There are two additional scripts that are managed here. One should only exist in the src loaded into
+   * the iframe: the iframe_tap.js code. The other should only exist on the server: the page_tap.js code.
+   * Neither should ever be visible to the editor.
+   * 
+   * The base _data.page_src variable is taken to be the 'pure' form of source, without the extra scripts
+   * added in. The iframe script is added and removed when roundtripping to the iframe, and the page script
+   * is added and removed when roundtripping to the server.
+   * 
+   * @returns {String} The literal current source
+   */
+  get_src() {
+    return this._data.page_src;
+  }
+  /**
    * Get source code for the viewport. This is slightly different from the base source code - it will have
    * some script code injected at the end so that internal comms can occur between the iframe and the nav app.
    * 
@@ -7999,10 +8328,12 @@ var DHPageContent = class extends DataHandler {
     return this._data.page_src + this.iframe_tap_script;
   }
   /**
-   * @returns {String} The literal current source
+   * Get source code for server. It has an extra script appended.
+   * 
+   * @returns {String} Server export source
    */
-  get_src() {
-    return this._data.page_src;
+  get_server_src() {
+    return this._data.page_src + this.page_tap_script;
   }
   /**
    * Set the source data for the datahandler. This may originate from any location. Some modification may be
@@ -8011,7 +8342,7 @@ var DHPageContent = class extends DataHandler {
    * @param {String} new_src New code to set as the source data for this datahandler
    */
   set_src(new_src) {
-    this._data.page_src = new_src.replace(this.iframe_tap_script, "");
+    this._data.page_src = new_src.replace(this.iframe_tap_script, "").replace(this.page_tap_script, "");
   }
   /**
    * @returns {String} The literal code to be injected such that the VP will have iframe tapping enabled.
@@ -8019,7 +8350,16 @@ var DHPageContent = class extends DataHandler {
   get iframe_tap_script() {
     return (
       /* html */
-      `<script async src="/s/js/iframe_tap.js"><\/script>`
+      `<script async src="/nav/scripts/iframe_tap.js"><\/script>`
+    );
+  }
+  /**
+   * @returns {String} The literal code that's appended for roundtrip with server.
+   */
+  get page_tap_script() {
+    return (
+      /* html */
+      `<script async src="/nav/scripts/page_tap.js"><\/script>`
     );
   }
   async pull() {
@@ -8028,23 +8368,20 @@ var DHPageContent = class extends DataHandler {
       this._data.page_src = "";
       return Promise.resolve();
     }
-    return new Promise((res, rej) => {
-      fetch(
-        this._tracked_page_url,
-        {
-          method: "GET"
-        }
-      ).then((response) => {
-        if (response.status == 200) {
-          return response.text();
-        } else {
-          rej(`Get source content for ${this._tracked_page_url} fails with code ${response.status}`);
-        }
-      }).then((response_text) => {
-        this._data.page_src = response_text;
-        this._last_pushed_checksum = this.generate_checksum();
-        res();
-      });
+    return fetch(
+      this._tracked_page_url,
+      {
+        method: "GET"
+      }
+    ).then((response) => {
+      if (response.status == 200) {
+        return response.text();
+      } else {
+        throw `Get source content for ${this._tracked_page_url} fails with code ${response.status}`;
+      }
+    }).then((response_text) => {
+      this.set_src(response_text);
+      this._last_pushed_checksum = this.generate_checksum();
     });
   }
   /**
@@ -8060,11 +8397,12 @@ var DHPageContent = class extends DataHandler {
     if (this._last_pushed_checksum == current_checksum || this._tracked_page_id == void 0) {
       return Promise.resolve();
     }
-    return new Promise((res, rej) => {
-      this.swyd.dispatch.call_server_function("page_set_content", this._tracked_page_id, this.get_src()).then(() => {
-        this._last_pushed_checksum = current_checksum;
-        res();
-      });
+    return this.swyd.dispatch.call_server_function(
+      "page_set_content",
+      this._tracked_page_id,
+      this.get_server_src()
+    ).then(() => {
+      this._last_pushed_checksum = current_checksum;
     });
   }
   /**

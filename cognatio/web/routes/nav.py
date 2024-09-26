@@ -58,11 +58,13 @@ def nav_route():
 	)
 
 @current_app.route("/nav/<path:path>")
-def dev_nav_src(path):
+def dev_nav_dir(path):
 	"""Expose source files for /nav so that the client may be used during development directly from
 	source files.
 	
 	This route is only for development.
+
+	In production /nav/* should redirect to /s/nav/*
 
 	Args:
 		path (str): Supplied rest of path
@@ -85,7 +87,6 @@ def dev_static(path):
 	if not cognatio_config['IS_DEV']:
 		return "Static can not be requested via flask if server is not in dev mode", 500
 	
-	static_dir = os.path.join(project_path, "cognatio", "web", "static")
 	return send_from_directory(env.fpath_static, path)
 
 @current_app.route("/sl/<path:path>")

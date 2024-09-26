@@ -151,6 +151,8 @@ class RegSWNav extends RegionSwitchyard
 		map_enabled: undefined,
 		/** @description True when a page is actively loading in. Referenced by many child regions.*/
 		page_loading: undefined,
+		/** @description The hash that was last used to set a page */
+		last_hash: undefined,
 	}
 
 	/** @type {RHElement} */
@@ -280,6 +282,7 @@ class RegSWNav extends RegionSwitchyard
 			window.setTimeout(()=>{res()}, 1000)
 		})
 
+		let page
 		return this.dh_page_resource.track_all().catch((e)=>
 		{
 			// This is the first place in the chain which will fail due to authentication if the user
@@ -319,7 +322,7 @@ class RegSWNav extends RegionSwitchyard
 		{
 			// Mass-change settings to new page, now that we certainly have access to it and know about it.
 			this.settings.page_id = id
-			let page = this.dh_page.comp_get(id)
+			page = this.dh_page.comp_get(id)
 			this.dh_page_content.track(id, page.page_url)
 			this.reg_coords.settings.local_page_name = page.name
 
@@ -342,6 +345,9 @@ class RegSWNav extends RegionSwitchyard
 		{
 			return this.dh_edge.pull()
 		}).then(()=>{
+			// Only set hash if already set to something, otherwise can never back out past no-hash because
+			// a hash is always added.
+			if(window.location.hash != "") window.location.hash = page.name
 			this.settings.page_loading = false
 			this.render()
 		}).catch((e)=>
@@ -508,6 +514,24 @@ class RegSWNav extends RegionSwitchyard
 		this.page_set(this.settings.page_id)
 
 		this.reg_loading.fade_out()
+
+		// Start tracking hash changes.
+		window.addEventListener('hashchange', ()=>
+		{
+			if(window.location.hash == this.settings.last_hash) return
+			this._select_default_page().then((id)=>
+			{
+				this.settings.last_hash = window.location.hash
+				return this.page_set(id)
+			})
+		})
+		// Set first hash value manually
+		if(this.settings.page_id != undefined)
+		{
+			let page = this.dh_page.comp_get(this.settings.page_id)
+			this.settings.last_hash = "#" + page.name
+			window.location.hash = page.name
+		}
 	}
 
 	on_load_failed(e)
@@ -521,8 +545,9 @@ class RegSWNav extends RegionSwitchyard
 	/**
 	 * This will determine what the 'default' page should be. The logic is as follows:
 	 * 1. Use the page in the current browser URL. If we're at /nav, then:
-	 * 2. Use this.default_page_name. If that does not exist, then:
-	 * 3. Return undefined.
+	 * 2. Check if there's an anchor. If not,
+	 * 3. Use this.default_page_name. If that does not exist, then:
+	 * 4. Return undefined.
 	 * 
 	 * @returns {Promise} That will resolve with ID or undefined.
 	 */
@@ -534,6 +559,10 @@ class RegSWNav extends RegionSwitchyard
 			if(String(window.location.pathname).includes("/page/"))
 			{
 				page_name = window.location.pathname.split('/').pop().split('.').pop()
+			}
+			else if(window.location.hash.length > 0)
+			{
+				page_name = window.location.hash.replace("#", "")
 			}
 			else
 			{

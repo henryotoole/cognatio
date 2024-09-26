@@ -13,9 +13,11 @@
 			// neat trick, if templating was disabled this would simply resolve to 'false'
 			const dev = "{{ cognatio_config['IS_DEV'] }}" == "True" // Jinja template.
 			
+			// Right now these just point to the same place. However, I'm keeping the switching code here
+			// so that if / when I implement versioned filename cachebusting I can re-employ this.
 			const importmap_json = {
 				imports: {
-					"nav": "/s/nav/nav_{{ cognatio_version }}.js"
+					"nav": "/nav/src/nav.js"
 				}
 			}
 
@@ -37,8 +39,8 @@
 			let sw = new RegSWNav().fab().link(document.body)
 			sw.load()
 		</script>
-		<link rel="stylesheet" href="/s/assets/nav.css">
-		<link rel="stylesheet" href="/s/assets/fonts.css">
+		<link rel="stylesheet" href="/nav/assets/nav.css">
+		<link rel="stylesheet" href="/nav/assets/fonts.css">
 
 		<!-- This style block is ONLY for classes that must exist on pageload before CSS etc. loads.-->
 		<style>

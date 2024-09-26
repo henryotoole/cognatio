@@ -94,7 +94,7 @@ class DHPageContent extends DataHandler
 	 */
 	get iframe_tap_script()
 	{
-		return /* html */`<script async src="/s/js/iframe_tap.js"></script>`
+		return /* html */`<script async src="/nav/scripts/iframe_tap.js"></script>`
 	}
 
 	/**
@@ -102,7 +102,7 @@ class DHPageContent extends DataHandler
 	 */
 	get page_tap_script()
 	{
-		return /* html */`<script async src="/s/js/page_tap.js"></script>`
+		return /* html */`<script async src="/nav/scripts/page_tap.js"></script>`
 	}
 
 	async pull()

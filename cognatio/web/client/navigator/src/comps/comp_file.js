@@ -10,10 +10,10 @@ const icon_map = {
 	'jpg': 'self',
 	'jpeg': 'self',
 	'svg': 'self',
-	'txt': '/s/assets/icons/file_text.svg',
-	'md': '/s/assets/icons/file_text.svg',
-	'log': '/s/assets/icons/file_text.svg',
-	'unknown': '/s/assets/icons/file_unknown.svg',
+	'txt': '/nav/assets/icons/file_text.svg',
+	'md': '/nav/assets/icons/file_text.svg',
+	'log': '/nav/assets/icons/file_text.svg',
+	'unknown': '/nav/assets/icons/file_unknown.svg',
 }
 
 class CompFile extends Component
