@@ -6826,7 +6826,8 @@ var RegNewPage = class _RegNewPage extends Region {
 					</div>
 					<div class='cont-mid'>
 						<div class='line underline'>
-							<label rfm_member='regin_page_name_cont'>Name: </label>
+							Name: 
+							<label style='margin-left: 0.5em' rfm_member='regin_page_name_cont'></label>
 						</div>
 						<div class='line underline'>
 							
@@ -7063,7 +7064,8 @@ var RegAlterPage = class extends Region {
 					</div>
 					<div class='cont-mid'>
 						<div class='line underline'>
-							<label rfm_member='regin_page_name_cont'>Name: </label>
+							Name:
+							<label style='margin-left: 0.5em' rfm_member='regin_page_name_cont'></label>
 						</div>
 						<div class='line underline'>
 							

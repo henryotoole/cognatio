@@ -31,16 +31,7 @@ Basic steps for installing these on a Ubuntu-like system are below.
 ### Filesystem ###
 This project relies on a some filesystem setup that is mostly, but not entirely, automatic. The reader will need to choose a 'local' directory (see below). Further notes on the filesystem schema used by cognatio are also below.
 
-# Informal list of all directories that must be nginx-routed
-"static"		| /s		| Static repo directory
-"local static"	| /sl		| Static local directory
-"pages"			| /pages	| Flat directory for pages, unique so as to make URL's and direct editing simple
-"nav_reroute"	| /nav/*	| Redirect to /s/nav/* with NGINX
-
-# Informal list of all directories that user must create
-"local"			| Will have /pages, /static, and /etc.
-
-# The Local Directory #
+**The Local Directory**
 All files which are generated during the use of cognatio are considered local. A directory must be made on the installation machine which contains these files. This includes pages, local static files, and others.
 
 The path to the directory for these files is specified in cognatio.cfg under the "FPATH_LOCAL" key.
@@ -51,12 +42,12 @@ Two of the subdirectories under local will need to be exposed to the world via n
 
 This may be achieved by giving 'others' execute permissions all the way up to root, and 'others' read permissions on all files within local. More complex arrangements can be made if the nginx group is placed on the files, of course.
 
-# The Pages Local Subdirectory #
+**The Pages Local Subdirectory**
 The pages (or nodes) that actually make up the cognatio system are stored in a flat file structure. These files can be navigated and read as normal HTML webpages. They sit behind an authentication layer (nginx -> flask) but are served by nginx.
 
 This directory will be setup automatically wherever the config tells it to when cognatio runs, if it does not already exist. It may not have permission to do this, and will complain about it if so.
 
-# The Static Local Subdirectory #
+**The Static Local Subdirectory**
 A static directory will also be automatically setup when cognatio runs. This is a location to place shared resources like icons, css files, scripts, etc. that are written uniquely for the cognatio installation. Not to be confused with the cognatio code's internal 'static' directory, which serves non-unique static files. 
 
 
@@ -65,12 +56,12 @@ A static directory will also be automatically setup when cognatio runs. This is 
 
 ### Backing Services ###
 
-# Valkey / Redis #
+**Valkey / Redis**
 I happen to be setting this up in the near-wake of the redis disaster. Every able-minded group seems to be in the process of switching to Valkey, which is convenient as ideologically I agree with the move.
 
 I've built Valkey from source and run it as systemd. However, I use the python 'redis' package as commands for Valkey and Redis are seemingly identical. Either server should work.
 
-# SQL #
+**SQL**
 An SQL server will need to be available. Any should do, and the access URI shall be specified in cognatio.cfg.
 
 
