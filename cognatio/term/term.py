@@ -52,6 +52,12 @@ def dev(action:str):
 	else:
 		print("Urecognized action")
 
+def version():
+	"""Print version string to console.
+	"""
+	from cognatio import version as cognatio_version
+	print(cognatio_version)
+
 
 # Fire can do much more interesting things in the long run. See BinaryCanvas
 # https://github.com/google/python-fire/blob/master/docs/guide.md
@@ -62,6 +68,7 @@ def fire_term():
 		'term': term,
 		'backup': backup,
 		'scan': scan,
+		'version': version,
 	}
 
 	if cognatio_config['IS_DEV']:

@@ -55,8 +55,6 @@ def rest_api_page_resource_specific(page_id: int, fname: str):
 	if page is None: return "No such page", 404
 	fpath = os.path.join(page.page_resource_folder_path, fname)
 
-	print(f"User {user_id} write access is ${page.get_user_write_access(user_id)}")
-
 	if request.method == "GET":
 		if not page.get_user_read_access(user_id): return f"No read access to page {page_id}", 403
 		return jsonify({
@@ -100,7 +98,6 @@ def rest_api_page_resource_general(page_id: int):
 	user_id = None if not isinstance(current_user, User) else current_user.id
 
 	if page is None: return "No such page", 404
-	print(f"Check user access ${user_id} to page ${page.name}")
 	if not page.get_user_read_access(user_id): return f"User does not have read access to page {page_id}", 403
 
 	return jsonify(_get_all(page))
@@ -116,7 +113,7 @@ def _get_url(page: Page, fname: str) -> str:
 	Returns:
 		str: Absolute URL with no domain
 	"""
-	return f"/page/{page.name}_resources/{fname}"
+	return f"/page/{page.name}/resources/{fname}"
 
 def _get_all(page: Page) -> 'list[str]':
 	"""Get all resources filenames available for this Page.

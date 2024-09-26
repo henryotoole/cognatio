@@ -8,7 +8,7 @@ NOTE: If celery ever becomes involved in this project, care will have to be take
 __author__ = "Josh Reed"
 
 # Our code
-from cognatio import cognatio_config
+from cognatio import cognatio_config, project_path
 
 # Other libs
 from flask import has_request_context
@@ -17,6 +17,7 @@ from hacutils.db import Database
 import structlog
 
 # Base python
+import os
 
 # Declare all getter functions for our env module in one go.
 class Env:
@@ -27,6 +28,18 @@ class Env:
 		# Here is where instances are stored for access in an environment.
 		self.namespace = {}
 
+	
+	@property
+	def fpath_static(self) -> str:
+		"""This is an internal folder (e.g. within the code filestructure) that is exposed freely to the internet
+		with nginx in production and with flask in development. Anything here is available to the world without
+		authentication.
+
+		Returns:
+			str: Absolute filepath
+		"""
+		return os.path.join(project_path, 'cognatio', 'web', 'static')
+
 	@property
 	def fpath_pages(self) -> str:
 		"""This folder contains all the pages (nodes) of the cognatio network. This folder is directly exposed
@@ -35,7 +48,7 @@ class Env:
 		Returns:
 			str: Absolute filepath
 		"""
-		return cognatio_config['FPATH_PAGES']
+		return os.path.join(cognatio_config['FPATH_LOCAL'], 'pages')
 	
 	@property
 	def fpath_etc(self) -> str:
@@ -44,7 +57,19 @@ class Env:
 		Returns:
 			str: Absolute filepath
 		"""
-		return cognatio_config['FPATH_ETC']
+		return os.path.join(cognatio_config['FPATH_LOCAL'], 'etc')
+	
+	@property
+	def fpath_static_local(self) -> str:
+		"""A folder for statically accessible resources similar to fpath_static, except for 'local' files that
+		are generated during the use of cognatio and unique to the particular installation.
+
+		For example, a user-created css file for a series of cognatio documents would belong here.
+
+		Returns:
+			str: Absolute filepath
+		"""
+		return os.path.join(cognatio_config['FPATH_LOCAL'], 'static')
 
 	@property
 	def redis(self) -> Redis:

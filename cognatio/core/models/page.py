@@ -136,7 +136,7 @@ class Page(Base):
 		"""Returns:
 			str: The absolute filesystem path for this pages 'page resource' folder.
 		"""
-		return os.path.join(env.fpath_pages, f"{self.name}_resources")
+		return os.path.join(env.fpath_pages, self.name, "resources")
 	
 	def get_user_read_access(self, user_id) -> bool:
 		"""Get whether or not a user has access to this Page. This is a complex function that handles

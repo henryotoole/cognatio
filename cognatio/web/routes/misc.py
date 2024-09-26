@@ -5,6 +5,7 @@ __author__ = "Josh Reed"
 # Our code
 from cognatio.core.models import Page
 from cognatio.core.enums import PageAccessMode
+from cognatio.util.paths import get_page_name_from_url
 from cognatio import cognatio_config
 
 # Other libs
@@ -19,15 +20,27 @@ import os
 def page_auth():
 	"""Determine whether or not the logged-in user has access to a page.
 	"""
-	# This will be the original requested route, something like '/static/private/../../...'
-	static_request_uri = request.headers['X-Original-Uri']
+	# This will be the original requested route, something like:
+	# '/page/target.html' or
+	# '/page/target' or
+	# '/page/target/resource/some_file.txt'
+	return _page_auth(request.headers['X-Original-Uri'])
 
-	# Pull the filename out of the request
-	static_request_parsed = urllib.parse.urlparse(static_request_uri)
-	requested_filename = os.path.basename(static_request_parsed.path)
+def _page_auth(url):
+	"""Actually perform the auth against a url. Broken for testing and internal use.
+
+	Args:
+		url (str): URL from the request to authorize
+
+	Returns:
+		tuple: flask-style response tuple.
+	"""
+
+	# Determine target page by analyzing URL.
+	pagename = get_page_name_from_url(url)
 
 	# Will launch a select * where query...
-	page = Page.get_by_name(requested_filename)
+	page = Page.get_by_name(pagename)
 	user_id = current_user.id if current_user.is_authenticated else None
 
 	# This function is as optimal as possible in terms of resource usage.

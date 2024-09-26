@@ -13,6 +13,8 @@ import structlog
 import os
 import pathlib
 
+version = "1.0.0"
+
 project_path = pathlib.Path(__file__).parent.parent.resolve()
 """This is the root path to the project and/or git repository. It contains cognatio/core, tests, et. al. Unlike
 all other paths, this is absolute and does not change for testing.
@@ -38,4 +40,6 @@ if not os.path.exists(env.fpath_etc):
 msg = dir_nginx_check_read_accessible(env.fpath_pages)
 if msg is not None:
 	logger.warn(msg)
-
+msg = dir_nginx_check_read_accessible(env.fpath_static)
+if msg is not None:
+	logger.warn(msg)

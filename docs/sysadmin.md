@@ -7,6 +7,18 @@
 
 ### Filesystem ###
 
+# Things to do for this section
+1. Check that below is correct
+2. Add notes for 'static' (path in nginx config MUST be /static)
+
+# Informal list of all directories that must be nginx-routed
+"static"		| /s		| Static repo directory
+"local static"	| /sl		| Static local directory
+"pages"			| /pages	| Flat directory for pages, unique so as to make URL's and direct editing simple
+
+# Informal list of all directories that user must create
+"local"			| Will have /pages, /static, and /etc.
+
 # The Pages Directory #
 The pages (or nodes) that actually make up the cognatio system are stored in a flat file structure. These files
 can be navigated and read as normal HTML webpages. They sit behind an authentication layer (nginx -> flask) but

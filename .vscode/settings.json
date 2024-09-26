@@ -1,0 +1,6 @@
+{
+	"search.exclude": {
+		"**/bin/*": true,
+		"**/cognatio/web/static/nav/*": true
+	}
+}
