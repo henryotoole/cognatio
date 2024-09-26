@@ -23,6 +23,7 @@ In the future, I'd love to return to this project from a sysadmin point of view 
 12. Fill in the "FLASK_SECRET_KEY" and "WEB_HOSTNAME" values in cognatio.cfg. The secret key should be a long (>32chars), random string and the web hostname will be the hostname at which the server will broadcast (e.g. cognatio.theroot.tech).
 13. Create a systemd service to operate the server. See the SystemD section for a sample service file.
 14. Setup nginx.
-	a. Install nginx onto the system.
-	b. Create a conf file for the cognatio nginx blocks.
-	c. TODO rest of this
+    1. Install nginx onto the system.
+    2. Create a conf file for the cognatio nginx blocks.
+    3. Run letsencrypt commands to setup ssl for this domain
+15. Start the systemctl service for cognatio.
