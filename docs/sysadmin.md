@@ -174,6 +174,9 @@ server {
 		etag on;
 		
 		alias {{YOUR_LOCAL_DIRECTORY}}/pages;
+		
+		# try_files is used here so that getting /page/name returns the .html file.
+		try_files $uri $uri.html /404;
 	}
 
 	# Simply broadcast static local directory
