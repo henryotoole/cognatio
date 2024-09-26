@@ -4034,7 +4034,6 @@ var RegionSwitchyard = class extends Region {
       this._loading = false;
       this.on_load_complete();
       this._call_on_load.forEach((fn) => fn());
-      this._anchor_on_hash_change(0);
       this.render();
     }).catch((e) => {
       this.on_load_failed(e);
@@ -4732,7 +4731,9 @@ var RegSWNav = class extends RegionSwitchyard {
     /** @description Whether or not the map is enabled. If enabled, files and editor are disabled. */
     map_enabled: void 0,
     /** @description True when a page is actively loading in. Referenced by many child regions.*/
-    page_loading: void 0
+    page_loading: void 0,
+    /** @description The hash that was last used to set a page */
+    last_hash: void 0
   };
   /** @type {RHElement} */
   cont_scroll;
@@ -4841,6 +4842,7 @@ var RegSWNav = class extends RegionSwitchyard {
         res();
       }, 1e3);
     });
+    let page;
     return this.dh_page_resource.track_all().catch((e) => {
       if (e instanceof ErrorREST && e.data.http_code == 403) {
         let prom;
@@ -4869,7 +4871,7 @@ var RegSWNav = class extends RegionSwitchyard {
       return this.dh_page.pull();
     }).then(() => {
       this.settings.page_id = id2;
-      let page = this.dh_page.comp_get(id2);
+      page = this.dh_page.comp_get(id2);
       this.dh_page_content.track(id2, page.page_url);
       this.reg_coords.settings.local_page_name = page.name;
     }).then(() => {
@@ -4883,6 +4885,7 @@ var RegSWNav = class extends RegionSwitchyard {
     }).then(() => {
       return this.dh_edge.pull();
     }).then(() => {
+      if (window.location.hash != "") window.location.hash = page.name;
       this.settings.page_loading = false;
       this.render();
     }).catch((e) => {
@@ -5006,6 +5009,18 @@ var RegSWNav = class extends RegionSwitchyard {
   on_load_complete() {
     this.page_set(this.settings.page_id);
     this.reg_loading.fade_out();
+    window.addEventListener("hashchange", () => {
+      if (window.location.hash == this.settings.last_hash) return;
+      this._select_default_page().then((id2) => {
+        this.settings.last_hash = window.location.hash;
+        return this.page_set(id2);
+      });
+    });
+    if (this.settings.page_id != void 0) {
+      let page = this.dh_page.comp_get(this.settings.page_id);
+      this.settings.last_hash = "#" + page.name;
+      window.location.hash = page.name;
+    }
   }
   on_load_failed(e) {
     this.reg_one_choice.present_message(
@@ -5016,8 +5031,9 @@ var RegSWNav = class extends RegionSwitchyard {
   /**
    * This will determine what the 'default' page should be. The logic is as follows:
    * 1. Use the page in the current browser URL. If we're at /nav, then:
-   * 2. Use this.default_page_name. If that does not exist, then:
-   * 3. Return undefined.
+   * 2. Check if there's an anchor. If not,
+   * 3. Use this.default_page_name. If that does not exist, then:
+   * 4. Return undefined.
    * 
    * @returns {Promise} That will resolve with ID or undefined.
    */
@@ -5026,6 +5042,8 @@ var RegSWNav = class extends RegionSwitchyard {
       let page_name;
       if (String(window.location.pathname).includes("/page/")) {
         page_name = window.location.pathname.split("/").pop().split(".").pop();
+      } else if (window.location.hash.length > 0) {
+        page_name = window.location.hash.replace("#", "");
       } else {
         page_name = this.default_page_name;
       }

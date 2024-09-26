@@ -39,7 +39,11 @@
 	 */
 	let nav_redirect = ()=>
 	{
-		window.location = "/nav#gateway"
+		// Infer page from location
+		let dirname = '/pages/',
+			path = String(window.location.pathname),
+			name = path.substring(path.indexOf(dirname) + dirname.length, path.indexOf(".html"))
+		window.location = "/nav#" + name
 	}
 
 })()
