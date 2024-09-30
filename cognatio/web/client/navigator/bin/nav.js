@@ -316,8 +316,8 @@ function serial_promises(promise_fns) {
   let out_list = [];
   return new Promise((res, rej) => {
     let fn = /* @__PURE__ */ __name2((index) => {
-      promise_fns[index]().then((out2) => {
-        out_list.push(out2);
+      promise_fns[index]().then((out) => {
+        out_list.push(out);
         if (index + 1 < promise_fns.length) {
           fn(index + 1);
         } else {
@@ -1434,17 +1434,17 @@ var DHTabular = class extends DataHandler {
    * @returns {Object} id-mapped data for each matching tabular record. This is NOT dereferenced.
    */
   where(filter_data) {
-    let out2 = {};
+    let out = {};
     Object.entries(this._data).forEach(([id2, data2]) => {
       let all_match = true;
       Object.entries(filter_data).forEach(([k, v]) => {
         if (data2[k] != v) all_match = false;
       });
       if (all_match) {
-        out2[id2] = data2;
+        out[id2] = data2;
       }
     });
-    return out2;
+    return out;
   }
   /**
    * Get reference to settings space for the provided ID.
@@ -1541,6 +1541,8 @@ var DHREST = class extends DHTabular {
   _bulk_get_enabled;
   /** @type {Boolean} Whether the bulk_update method is used to update multiple ID's */
   _bulk_update_enabled;
+  /** @type {Boolean} Whether cachebusting is enabled. If so, all fetch operations will cachebust. */
+  _cache_bust_enabled;
   /** @type {string} The key of the ID for a record in server-returned data */
   _id_key;
   /** @type {PUSH_CONFLICT_RESOLUTIONS} how this dh instance will resolve push conflicts */
@@ -1565,6 +1567,7 @@ var DHREST = class extends DHTabular {
     }
     this._bulk_get_enabled = bulk_get;
     this._bulk_update_enabled = bulk_update;
+    this._cache_bust_enabled = true;
     this._id_key = id_key;
     this.push_conflict_res = PUSH_CONFLICT_RESOLUTIONS.WITH_EXCEPTION;
     this._tracked_ids = [];
@@ -1813,11 +1816,15 @@ var DHREST = class extends DHTabular {
         altered_url = new URL(this._url_for(void 0) + "_get_filtered");
         altered_url.searchParams.append("filter", btoa(JSON.stringify(filter_data)));
       }
+      let opts = {
+        method: "GET"
+      };
+      if (this._cache_bust_enabled) {
+        opts.cache = "no-store";
+      }
       fetch(
         altered_url,
-        {
-          method: "GET"
-        }
+        opts
       ).then((response) => {
         if (response.status == 200) {
           return response.json();
@@ -1842,11 +1849,15 @@ var DHREST = class extends DHTabular {
    */
   async _get(id2) {
     return new Promise((res, rej) => {
+      let opts = {
+        method: "GET"
+      };
+      if (this._cache_bust_enabled) {
+        opts.cache = "no-store";
+      }
       fetch(
         this._url_for(id2),
-        {
-          method: "GET"
-        }
+        opts
       ).then((response) => {
         if (response.status == 200) {
           return response.json();
@@ -1918,11 +1929,15 @@ var DHREST = class extends DHTabular {
         res({});
         return;
       }
+      let opts = {
+        method: "GET"
+      };
+      if (this._cache_bust_enabled) {
+        opts.cache = "no-store";
+      }
       fetch(
         altered_url,
-        {
-          method: "GET"
-        }
+        opts
       ).then((response) => {
         if (response.status == 200) {
           return response.json();
@@ -3400,13 +3415,13 @@ var RadioGroup = class {
    * @returns {String} The cb_value of the currently selected checkbox or 'undefined'.
    */
   _group_state_get() {
-    let out2 = void 0;
+    let out = void 0;
     this._checkboxes.forEach((regin_cb) => {
       if (regin_cb.settings.value) {
-        out2 = regin_cb._radio_cb_value;
+        out = regin_cb._radio_cb_value;
       }
     });
-    return out2;
+    return out;
   }
 };
 var RegInTextArea = class _RegInTextArea extends RegIn {
@@ -3468,23 +3483,23 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
       this.settings.selmem = { start, end };
       if (this.tab_enabled && e.key == "Tab") {
         e.preventDefault();
-        let out2;
+        let out;
         if (e.shiftKey) {
-          out2 = _RegInTextArea._text_shift_tab_behavior_alter(this.textarea.value, start, end);
+          out = _RegInTextArea._text_shift_tab_behavior_alter(this.textarea.value, start, end);
         } else {
-          out2 = _RegInTextArea._text_tab_behavior_alter(this.textarea.value, start, end);
+          out = _RegInTextArea._text_tab_behavior_alter(this.textarea.value, start, end);
         }
-        this.textarea.value = out2.text;
-        this.textarea.selectionEnd = out2.selend;
-        this.textarea.selectionStart = out2.selstart;
+        this.textarea.value = out.text;
+        this.textarea.selectionEnd = out.selend;
+        this.textarea.selectionStart = out.selstart;
         this._view_alters_value(this.textarea.value);
       }
       if (this.tab_enabled && e.key == "Enter") {
         e.preventDefault();
-        let out2 = _RegInTextArea._text_newline_behavior_alter(this.textarea.value, start, end);
-        this.textarea.value = out2.text;
-        this.textarea.selectionEnd = out2.selend;
-        this.textarea.selectionStart = out2.selstart;
+        let out = _RegInTextArea._text_newline_behavior_alter(this.textarea.value, start, end);
+        this.textarea.value = out.text;
+        this.textarea.selectionEnd = out.selend;
+        this.textarea.selectionStart = out.selstart;
         this._view_alters_value(this.textarea.value);
       }
       if (e.ctrlKey && e.code == "KeyZ") {
@@ -3576,7 +3591,7 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
    * @returns {Object} With keys: text, selstart, selend for the new configuration of this text selection.
    */
   static _text_newline_behavior_alter(text, selstart, selend) {
-    let out2 = { text: "" };
+    let out = { text: "" };
     let text_i = selstart - 1, n_tabs = 0;
     while (text_i >= 0) {
       if (text[text_i] == "	") n_tabs += 1;
@@ -3587,10 +3602,10 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
     for (let x = 0; x < n_tabs; x++) {
       inserted += "	";
     }
-    out2.text = text.substring(0, selstart) + inserted + text.substring(selend);
-    out2.selstart = selstart + inserted.length;
-    out2.selend = out2.selstart;
-    return out2;
+    out.text = text.substring(0, selstart) + inserted + text.substring(selend);
+    out.selstart = selstart + inserted.length;
+    out.selend = out.selstart;
+    return out;
   }
   /**
    * Determine how to modify text in a textarea as the result of a tab keydown even in which SHIFT is not held.
@@ -3606,32 +3621,32 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
    * @returns {Object} With keys: text, selstart, selend for the new configuration of this text selection.
    */
   static _text_tab_behavior_alter(text, selstart, selend) {
-    let out2 = { text: "" };
+    let out = { text: "" };
     if (selstart == selend) {
-      out2.text = text.substring(0, selstart) + "	" + text.substring(selend);
-      out2.selstart = selstart + 1;
-      out2.selend = out2.selstart;
-      return out2;
+      out.text = text.substring(0, selstart) + "	" + text.substring(selend);
+      out.selstart = selstart + 1;
+      out.selend = out.selstart;
+      return out;
     }
     let seltext = text.substring(selstart, selend);
     if (seltext.indexOf("\n") == -1) {
-      out2.text = text.substring(0, selstart) + "	" + text.substring(selend);
-      out2.selstart = selstart + 1;
-      out2.selend = out2.selstart;
+      out.text = text.substring(0, selstart) + "	" + text.substring(selend);
+      out.selstart = selstart + 1;
+      out.selend = out.selstart;
     } else {
       let selected_lines = _RegInTextArea._text_get_selected_lines(text, selstart, selend);
-      out2.text = text;
+      out.text = text;
       selected_lines.reverse().forEach((first_char_i) => {
         if (first_char_i == text.length) {
-          out2.text += "	";
+          out.text += "	";
         } else {
-          out2.text = out2.text.substring(0, first_char_i) + "	" + out2.text.substring(first_char_i);
+          out.text = out.text.substring(0, first_char_i) + "	" + out.text.substring(first_char_i);
         }
       });
-      out2.selend = selend + selected_lines.length;
-      out2.selstart = selstart;
+      out.selend = selend + selected_lines.length;
+      out.selstart = selstart;
     }
-    return out2;
+    return out;
   }
   /**
    * Determine how to modify text in a textarea as the result of a tab event in which SHIFT is also held.
@@ -3648,30 +3663,30 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
    * @returns {Object} With keys: text, selstart, selend for the new configuration of this text selection.
    */
   static _text_shift_tab_behavior_alter(text, selstart, selend) {
-    let out2 = { text: "" };
+    let out = { text: "" };
     if (selstart == selend) {
       if (text.indexOf("	") != -1)
-        out2.text = text.substring(0, selstart - 1) + text.substring(selend);
-      out2.selstart = selstart - 1;
-      out2.selend = out2.selstart;
-      return out2;
+        out.text = text.substring(0, selstart - 1) + text.substring(selend);
+      out.selstart = selstart - 1;
+      out.selend = out.selstart;
+      return out;
     }
     let seltext = text.substring(selstart, selend);
     if (seltext.indexOf("\n") == -1) return { "text": text, "selstart": selstart, "selend": selend };
     let selected_lines = _RegInTextArea._text_get_selected_lines(text, selstart, selend), n_remd = 0;
-    out2.text = text;
+    out.text = text;
     selected_lines.reverse().forEach((first_char_i) => {
       if (first_char_i == text.length) {
       } else {
-        if (out2.text[first_char_i] == "	") {
+        if (out.text[first_char_i] == "	") {
           n_remd += 1;
-          out2.text = out2.text.substring(0, first_char_i) + out2.text.substring(first_char_i + 1);
+          out.text = out.text.substring(0, first_char_i) + out.text.substring(first_char_i + 1);
         }
       }
     });
-    out2.selend = selend - selected_lines.length;
-    out2.selstart = selstart;
-    return out2;
+    out.selend = selend - selected_lines.length;
+    out.selstart = selstart;
+    return out;
   }
   /**
    * Get a list of selected-line start indices.
@@ -5877,6 +5892,7 @@ var RegEditor = class extends Region {
 					position: absolute;
 					top: 0; left: 0;
 					background-color: transparent;
+					pointer-events: none;
 				}
 				& .red-line.top {
 					width: 100%; height: 2em;
@@ -5897,6 +5913,10 @@ var RegEditor = class extends Region {
 				textarea:focus {
 					outline: none;
 				}
+				textarea.wrap-bound {
+					text-wrap: wrap;
+					width: auto;
+				}
 				& .ruler-row {
 					position: absolute;
 					top: 1em; left: 2em;
@@ -5910,6 +5930,10 @@ var RegEditor = class extends Region {
 					font-family: "IBM Mono";
 					font-size: 0.7em;
 					padding-left: 0.2em;
+					cursor: pointer;
+				}
+				& .ruler-label:hover {
+					text-decoration: underline;
 				}
 				& .ruler {
 					user-select: none;
@@ -5957,10 +5981,12 @@ var RegEditor = class extends Region {
 					</div>
 					<div rfm_member='cont_editor' class='cont-editor'>
 						<div class='ruler-row'>
-							<textarea class='ruler' cols=115></textarea><div class='ruler-label'>115</div>
+							<textarea class='ruler' cols=115></textarea>
+							<div rfm_member='ruler_115' class='ruler-label'>115</div>
 						</div>
 						<div class='ruler-row'>
-							<textarea class='ruler' cols=80></textarea><div class='ruler-label'>80</div>
+							<textarea class='ruler' cols=80></textarea>
+							<div rfm_member='ruler_80' class='ruler-label'>80</div>
 						</div>
 						<div class='red-line left'></div>
 						<div class='red-line top'></div>
@@ -5979,7 +6005,9 @@ var RegEditor = class extends Region {
     /** @description The last URL that this editor had its code loaded for. */
     page_id_loaded_for: void 0,
     /** @description Local copy of the 'code' for the currently loaded page. Will change as user edits. */
-    local_code: void 0
+    local_code: void 0,
+    /** @description Ruler offset in characters, or undefined to disable. Sets a hard word wrap */
+    ruler_offset: void 0
   };
   /** @type {RegSWNav} Reference to the switchyard region. */
   swyd;
@@ -5991,6 +6019,10 @@ var RegEditor = class extends Region {
   btn_apply;
   /** @type {RHElement} */
   btn_upload;
+  /** @type {RHElement} */
+  ruler_80;
+  /** @type {RHElement} */
+  ruler_115;
   /** @type {RegInTextArea} */
   editor;
   _create_subregions() {
@@ -6010,8 +6042,18 @@ var RegEditor = class extends Region {
     this.editor.textarea.addEventListener("keydown", (e) => {
       if (e.ctrlKey && e.code == "KeyS") {
         e.preventDefault();
-        this.code_apply();
+        this.code_upload();
       }
+      if (e.ctrlKey && e.code == "KeyD") {
+        e.preventDefault();
+        this.duplicate_line();
+      }
+    });
+    this.ruler_80.addEventListener("click", () => {
+      this.set_ruler(80);
+    });
+    this.ruler_115.addEventListener("click", () => {
+      this.set_ruler(115);
     });
   }
   /**
@@ -6061,13 +6103,7 @@ var RegEditor = class extends Region {
     this.code_apply();
     return new Promise((res, rej) => {
       this.swyd.dh_page_content.push().then(() => {
-        return this.swyd.dh_edge.track_all_for_page(this.swyd.settings.page_id);
-      }).then((ids) => {
-        this.swyd.dh_edge.mark_for_refresh(ids);
-        return this.swyd.dh_edge.pull();
-      }).then(() => {
-        this.swyd.dh_page.mark_for_refresh(this.swyd.settings.page_id);
-        return this.swyd.dh_page.pull();
+        return this.swyd.dh_page.network_update_for_page(this.swyd.dh_edge, this.swyd.settings.page_id);
       }).then(() => {
         this.swyd.render(true);
         res();
@@ -6076,6 +6112,34 @@ var RegEditor = class extends Region {
         throw e;
       });
     });
+  }
+  /**
+   * Duplicate the line on which the cursor currently rests. If there's a range selected, nothing occurs.
+   */
+  duplicate_line() {
+    let start = this.editor.textarea.selectionStart, end = this.editor.textarea.selectionEnd, textarea = this.editor.textarea, text = textarea.value;
+    if (start != end) return;
+    let line_start_i = RegInTextArea._text_get_selected_lines(text, start, end)[0];
+    let line_end_i = text.indexOf("\n", line_start_i);
+    let line = text.substring(line_start_i, line_end_i);
+    text = text.substring(0, line_end_i) + "\n" + line + text.substring(line_end_i);
+    textarea.value = text;
+    textarea.selectionStart = start;
+    textarea.selectionEnd = end;
+    this.editor._view_alters_value(textarea.value);
+  }
+  /**
+   * Set the hard, word-wrap enforcing ruler for the editor textarea.
+   * 
+   * @param {Number} n_chars Number of chars
+   */
+  set_ruler(n_chars) {
+    if (this.settings.ruler_offset == n_chars) {
+      this.settings.ruler_offset = void 0;
+    } else {
+      this.settings.ruler_offset = n_chars;
+    }
+    this.render();
   }
   _on_settings_refresh() {
     this.settings.page_id_loaded_for = void 0;
@@ -6090,6 +6154,13 @@ var RegEditor = class extends Region {
     this.btn_apply.class_set("collapsed", !this.has_unapplied_changes);
     this.btn_upload.class_set("collapsed", !this.has_unsaved_changes);
     this.loading_layer.style.opacity = this.swyd.settings.page_loading ? "35%" : "";
+    if (this.settings.ruler_offset == void 0) {
+      this.editor.textarea.removeAttribute("cols");
+      this.editor.textarea.classList.remove("wrap-bound");
+    } else {
+      this.editor.textarea.setAttribute("cols", this.settings.ruler_offset);
+      this.editor.textarea.classList.add("wrap-bound");
+    }
   }
 };
 
@@ -6935,10 +7006,23 @@ var RegNewPage = class _RegNewPage extends Region {
         rej();
         return;
       }
-      this.swyd.dh_page.create(this.settings.page_read_access, name).then((new_id) => {
-        return this.swyd.dispatch.call_server_function("page_set_content", new_id, HTML_STUBS.BASIC).then(() => {
-          return this.swyd.page_set(new_id);
-        });
+      let promise_unsaved = Promise.resolve();
+      if (this.swyd.reg_editor.has_unsaved_changes) {
+        promise_unsaved = this.swyd.reg_two_choice.present_choice(
+          "Unsaved Changes",
+          "There are changes in the editor that have not been pushed to the server. These changes will be lost if the Navigator jumps to a new page. Are you sure you wish to proceed?",
+          "No",
+          "Yes"
+        );
+      }
+      let new_id;
+      promise_unsaved.then(() => {
+        return this.swyd.dh_page.create(this.settings.page_read_access, name);
+      }).then((_new_id) => {
+        new_id = _new_id;
+        return this.swyd.dispatch.call_server_function("page_set_content", new_id, HTML_STUBS.BASIC);
+      }).then(() => {
+        return this.swyd.page_set(new_id);
       }).then(() => {
         res();
       }).catch((e) => {
@@ -8157,10 +8241,10 @@ var RegLogin = class extends Region {
 									<div class='title'> Navigator Login </div>
 									<div class='interface-rec'>
 										<div class='terminal input-line'>
-											<div rfm_member='login_email'></div>
+											<div rfm_member='login_email' name='email' autocomplete='email'></div>
 										</div>
 										<div class='terminal input-line'>
-											<div rfm_member='login_password'></div>
+											<div rfm_member='login_password' name='password' autocomplete='password'></div>
 										</div>
 									</div>
 									<div class='row'>
@@ -8461,6 +8545,30 @@ var DHPage = class extends DHREST {
    */
   track_and_pull_ripple(start_id, max_order) {
   }
+  /**
+   * Check for network updates around a specific page. This will ensure that the page's weight and connecting
+   * edges are all up to date. This is intended to be called after a page's source has changed and handles the
+   * cases where page mass changes, edges are added, altered, or removed.
+   * 
+   * @param {DHEdge} dh_edge The edge datahandler reference
+   * @param {Number} page_id The ID of the page to update nodes and edges for
+   * 
+   * @returns {Promise} That resolves when update is complete.
+   */
+  async network_update_for_page(dh_edge, page_id) {
+    return dh_edge.track_all_for_page(page_id).then((ids) => {
+      dh_edge.get_edges_for_page(page_id).forEach((existing_edge) => {
+        if (ids.indexOf(existing_edge.id) == -1) {
+          dh_edge.untrack_ids([existing_edge.id]);
+        }
+      });
+      dh_edge.mark_for_refresh(ids);
+      return dh_edge.pull();
+    }).then(() => {
+      this.mark_for_refresh(page_id);
+      return this.pull();
+    });
+  }
 };
 
 // cognatio/web/client/navigator/src/dh/dh_page_content.js
@@ -8559,7 +8667,8 @@ var DHPageContent = class extends DataHandler {
     return fetch(
       this._tracked_page_url,
       {
-        method: "GET"
+        method: "GET",
+        cache: "no-store"
       }
     ).then((response) => {
       if (response.status == 200) {
@@ -8782,8 +8891,9 @@ var DHEdge = class extends DHREST {
    * @returns {Array.<CompEdge>} A list of comps that link to or from this page
    */
   get_edges_for_page(page_id) {
-    out = [];
+    let out = [];
     Object.entries(this._data).forEach(([id2, data2]) => {
+      id2 = Number(id2);
       if (data2.page_id_term == page_id || data2.page_id_orig == page_id) {
         out.push(this.comp_get(id2));
       }
@@ -9324,7 +9434,7 @@ var Network = class _Network {
    * @returns {Array} Of objects of above form
    */
   edges_get_flat() {
-    let out2 = [];
+    let out = [];
     Object.values(this.edges).forEach((edge) => {
       let edgeref = {
         node_id_1: edge.node_orig.id,
@@ -9339,9 +9449,9 @@ var Network = class _Network {
           edgeref.double = true;
         }
       });
-      out2.push(edgeref);
+      out.push(edgeref);
     });
-    return out2;
+    return out;
   }
   /**
    * Get a new network that's composed of a subset of this one from the focal point out to a certain order.
@@ -9383,11 +9493,11 @@ var Network = class _Network {
     if (n <= 0) throw new Error("n must be > 1");
     if (start >= end) throw new Error("must describe a range");
     if (n == 1) return [(start + end) / 2];
-    let out2 = [], spacing = (end - start) / (n - 1);
+    let out = [], spacing = (end - start) / (n - 1);
     for (let i = 0; i < n; i++) {
-      out2.push(start + i * spacing);
+      out.push(start + i * spacing);
     }
-    return out2;
+    return out;
   }
   /**
    * This method exists, currently, so that checksums can be made off it. So only renderable data need be

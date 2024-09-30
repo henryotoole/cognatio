@@ -45,9 +45,10 @@ class DHEdge extends DHREST
 	 */
 	get_edges_for_page(page_id)
 	{
-		out = []
+		let out = []
 		Object.entries(this._data).forEach(([id, data])=>
 		{
+			id = Number(id) // Object.entires converts to string
 			if(data.page_id_term == page_id || data.page_id_orig == page_id)
 			{
 				out.push(this.comp_get(id))

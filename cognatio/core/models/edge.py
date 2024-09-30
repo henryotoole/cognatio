@@ -8,6 +8,7 @@ from cognatio.core.models import Base, Page
 from cognatio import env
 
 # Other libs
+from sqlalchemy import select
 from sqlalchemy.orm import Mapped, mapped_column
 
 # Base python
@@ -88,6 +89,30 @@ class Edge(Base):
 			Page: The terminating page or None.
 		"""
 		return env.db.session.get(Page, self.page_id_term)
+	
+	@staticmethod
+	def get_edges_originating_from_page(page_id) -> 'list[Edge]':
+		"""Get all edges that originate from the provided page id
+
+		Args:
+			page_id (int): page ID
+
+		Returns:
+			list[Edge]: list of edges
+		"""
+		return list(env.db.session.execute(select(Edge).filter_by(page_id_orig=page_id)).scalars())
+	
+	@staticmethod
+	def get_edges_terminating_on_page(page_id) -> 'list[Edge]':
+		"""Get all edges that terminate on the provided page id
+
+		Args:
+			page_id (int): page ID
+
+		Returns:
+			list[Edge]: list of edges
+		"""
+		return list(env.db.session.execute(select(Edge).filter_by(page_id_term=page_id)).scalars())
 	
 	def __repr__(self): return self.__str__()
 

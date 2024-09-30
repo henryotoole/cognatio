@@ -32,6 +32,7 @@ class PageScanner:
 			page_ids (list, optional): List of page id's to include in the scan. If None, all pages are scanned.
 		"""
 		self._scan_page_ids = page_ids
+		self.reset()
 
 	def scan(self):
 		"""Run a scan operation. This will clear all cache variables and run a full scan.
@@ -45,22 +46,27 @@ class PageScanner:
 		mass_total = 0
 		for page in pages:
 			page: Page
-			fpath = page.fpath
 			logger.info(f"> Scanning {page.name}...")
 
 			# Parse each to links
-			with open(fpath, 'r') as ffile:
-				html = ffile.read()
-			parser = CognatioParser()
-			parser.feed(html)
+			parser = self._parser_get(page.id)
 
 			# Add each link to internal cache
 			for link in parser.links:
 				self._edge_merge(page, link)
 
 			# Cache page weight at this stage too.
-			page.mass_cached = self._mass_calc(html)
+			page.mass_cached = self._mass_calc(parser.orig_html)
 			mass_total += page.mass_cached
+
+		# Check for stale edges for this page AFTER caching parsers but before adding new eges
+		for page in pages:
+			# Get all edges that originate from, or terminate on, this page.
+			edges = Edge.get_edges_originating_from_page(page.id) + Edge.get_edges_terminating_on_page(page.id)
+			for edge in edges:
+				if not self._edge_should_exist(edge):
+					env.db.session.delete(edge)
+		env.db.session.commit()
 				
 		# Then iterate the resulting edge cache to add to db.
 		for cstr, data in self._edge_cache.items():
@@ -76,6 +82,7 @@ class PageScanner:
 		"""Reset all cache variables.
 		"""
 		self._edge_cache = {}
+		self._parser_cache = {}
 
 	def _get_pages_to_scan(self) -> 'list[Page]':
 		"""Get a list of page instances to scan in this run.
@@ -92,6 +99,34 @@ class PageScanner:
 		for id in self._scan_page_ids:
 			pages.append(env.db.session.get(Page, id))
 		return pages
+	
+	def _parser_get(self, page_id: int) -> CognatioParser:
+		"""A caching function for finished parsed HTML by page ID.
+
+		The returned parser instance will have a reference to originating page name at
+		parser.page_name
+
+		Args:
+			page_id (int): The page ID
+
+		Returns:
+			CognatioParser: A parser instance that's been run on this page's HTML already or None if
+				no such page exists.
+		"""
+		if not page_id in self._parser_cache:
+			page = env.db.session.get(Page, page_id)
+			if page is None:
+				self._parser_cache[page_id] = None
+			else:
+				# Parse each to links
+				with open(page.fpath, 'r') as ffile:
+					html = ffile.read()
+				parser = CognatioParser()
+				parser.feed(html)
+				self._parser_cache[page_id] = parser
+
+		return self._parser_cache[page_id]
+
 
 	def _edge_merge(self, originating_page: Page, link: Link):
 		"""Attempt to add an edge to the internal cache on the basis of a link object. Recall that the Link
@@ -144,6 +179,34 @@ class PageScanner:
 			env.db.session.add(edge)
 		else:
 			edge_row[0].bond_strength_cached = strength
+
+	def _edge_should_exist(self, edge: Edge) -> bool:
+		"""Check that an existing edge (know because its record persists in the database) still has at least
+		one record causing it to remain in existence.
+
+		This method exists so that 'partial' rescans will successfully delete any edges that need pruning.
+
+		NOTE: This method can probably be optimized. Adding a page-caching function to this class will
+		speed this up.
+
+		Args:
+			edge (Edge): An edge to check for continued existence
+
+		Returns:
+			bool
+		"""
+		parser = self._parser_get(edge.page_id_orig)
+		page_term = env.db.session.get(Page, edge.page_id_term)
+
+		if page_term is None:
+			raise ValueError("Not yet sure how to deal with deleted pages.")
+
+		keep = False
+		for link in parser.links:
+			if(link['page_name'] == page_term.name):
+				keep = True
+
+		return keep
 
 	def _mass_calc(self, html: str) -> int:
 		"""Compute the 'mass' of an HTML document. This will return an integer. Mass aims to be a measure of

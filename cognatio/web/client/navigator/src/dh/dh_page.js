@@ -4,7 +4,7 @@
  */
 
 import { DHREST } from "../lib/regional.js";
-import { CompPage } from "../nav.js";
+import { CompPage, DHEdge } from "../nav.js";
 
 const PageAccessMode =
 {
@@ -63,6 +63,41 @@ class DHPage extends DHREST
 	track_and_pull_ripple(start_id, max_order)
 	{
 
+	}
+
+	/**
+	 * Check for network updates around a specific page. This will ensure that the page's weight and connecting
+	 * edges are all up to date. This is intended to be called after a page's source has changed and handles the
+	 * cases where page mass changes, edges are added, altered, or removed.
+	 * 
+	 * @param {DHEdge} dh_edge The edge datahandler reference
+	 * @param {Number} page_id The ID of the page to update nodes and edges for
+	 * 
+	 * @returns {Promise} That resolves when update is complete.
+	 */
+	async network_update_for_page(dh_edge, page_id)
+	{
+		// Collect all edges for the current page. Some new ones may have been created.
+		return dh_edge.track_all_for_page(page_id).then((ids)=>
+		{
+			// Check if any currently known tracked and known edges no longer exist.
+			dh_edge.get_edges_for_page(page_id).forEach((existing_edge)=>
+			{
+				if(ids.indexOf(existing_edge.id) == -1)
+				{
+					dh_edge.untrack_ids([existing_edge.id])
+				}
+			})
+
+			// Force refresh all in case weights have updated.
+			dh_edge.mark_for_refresh(ids)
+			return dh_edge.pull()
+		}).then(()=>
+		{
+			// Now update dh_page in case mass has changed
+			this.mark_for_refresh(page_id)
+			return this.pull()
+		})
 	}
 }
 

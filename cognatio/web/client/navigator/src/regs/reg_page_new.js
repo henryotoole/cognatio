@@ -188,11 +188,13 @@ class RegNewPage extends Region
 					"Yes"
 				)
 			}
+			let new_id
 			promise_unsaved.then(()=>
 			{
 				return this.swyd.dh_page.create(this.settings.page_read_access, name)
-			}).then((new_id)=>
+			}).then((_new_id)=>
 			{
+				new_id = _new_id
 				return this.swyd.dispatch.call_server_function('page_set_content', new_id, HTML_STUBS.BASIC)
 			}).then(()=>
 			{

@@ -84,6 +84,7 @@ class RegEditor extends Region
 					position: absolute;
 					top: 0; left: 0;
 					background-color: transparent;
+					pointer-events: none;
 				}
 				& .red-line.top {
 					width: 100%; height: 2em;
@@ -104,6 +105,10 @@ class RegEditor extends Region
 				textarea:focus {
 					outline: none;
 				}
+				textarea.wrap-bound {
+					text-wrap: wrap;
+					width: auto;
+				}
 				& .ruler-row {
 					position: absolute;
 					top: 1em; left: 2em;
@@ -117,6 +122,10 @@ class RegEditor extends Region
 					font-family: "IBM Mono";
 					font-size: 0.7em;
 					padding-left: 0.2em;
+					cursor: pointer;
+				}
+				& .ruler-label:hover {
+					text-decoration: underline;
 				}
 				& .ruler {
 					user-select: none;
@@ -161,10 +170,12 @@ class RegEditor extends Region
 					</div>
 					<div rfm_member='cont_editor' class='cont-editor'>
 						<div class='ruler-row'>
-							<textarea class='ruler' cols=115></textarea><div class='ruler-label'>115</div>
+							<textarea class='ruler' cols=115></textarea>
+							<div rfm_member='ruler_115' class='ruler-label'>115</div>
 						</div>
 						<div class='ruler-row'>
-							<textarea class='ruler' cols=80></textarea><div class='ruler-label'>80</div>
+							<textarea class='ruler' cols=80></textarea>
+							<div rfm_member='ruler_80' class='ruler-label'>80</div>
 						</div>
 						<div class='red-line left'></div>
 						<div class='red-line top'></div>
@@ -184,6 +195,8 @@ class RegEditor extends Region
 		page_id_loaded_for: undefined,
 		/** @description Local copy of the 'code' for the currently loaded page. Will change as user edits. */
 		local_code: undefined,
+		/** @description Ruler offset in characters, or undefined to disable. Sets a hard word wrap */
+		ruler_offset: undefined,
 	}
 
 	/** @type {RegSWNav} Reference to the switchyard region. */
@@ -196,6 +209,10 @@ class RegEditor extends Region
 	btn_apply
 	/** @type {RHElement} */
 	btn_upload
+	/** @type {RHElement} */
+	ruler_80
+	/** @type {RHElement} */
+	ruler_115
 	/** @type {RegInTextArea} */
 	editor
 
@@ -221,7 +238,17 @@ class RegEditor extends Region
 				e.preventDefault()
 				this.code_upload()
 			}
+
+			if(e.ctrlKey && e.code == "KeyD")
+			{
+				// Don't try to save the web-page.
+				e.preventDefault()
+				this.duplicate_line()
+			}
 		})
+
+		this.ruler_80.addEventListener('click', ()=>{this.set_ruler(80)})
+		this.ruler_115.addEventListener('click', ()=>{this.set_ruler(115)})
 	}
 
 	/**
@@ -284,18 +311,7 @@ class RegEditor extends Region
 		{
 			this.swyd.dh_page_content.push().then(()=>
 			{
-				// Collect all edges for the current page. Some new ones may have been created.
-				return this.swyd.dh_edge.track_all_for_page(this.swyd.settings.page_id)
-			}).then((ids)=>
-			{
-				// Force refresh all in case weights have updated.
-				this.swyd.dh_edge.mark_for_refresh(ids)
-				return this.swyd.dh_edge.pull()
-			}).then(()=>
-			{
-				// Now update dh_page in case mass has changed
-				this.swyd.dh_page.mark_for_refresh(this.swyd.settings.page_id)
-				return this.swyd.dh_page.pull()
+				return this.swyd.dh_page.network_update_for_page(this.swyd.dh_edge, this.swyd.settings.page_id)
 			}).then(()=>
 			{
 				this.swyd.render(true)
@@ -306,6 +322,52 @@ class RegEditor extends Region
 				throw(e)
 			})
 		})
+	}
+
+	/**
+	 * Duplicate the line on which the cursor currently rests. If there's a range selected, nothing occurs.
+	 */
+	duplicate_line()
+	{
+		// NOTE: Odd wrapping is a requirement of how the base textarea keeps track of state for undo/redo
+		// and regional VMC stuff.
+
+		// Wrapping start
+		let start = this.editor.textarea.selectionStart,
+			end = this.editor.textarea.selectionEnd,
+			textarea = this.editor.textarea,
+			text = textarea.value
+		if(start != end) return
+
+		// Operate on text
+		let line_start_i = RegInTextArea._text_get_selected_lines(text, start, end)[0]
+		let line_end_i = text.indexOf("\n", line_start_i)
+		let line = text.substring(line_start_i, line_end_i)
+		text = text.substring(0, line_end_i) + "\n" + line + text.substring(line_end_i)
+
+		// Wrapping end
+		textarea.value = text
+		textarea.selectionStart = start
+		textarea.selectionEnd = end
+		this.editor._view_alters_value(textarea.value)
+	}
+
+	/**
+	 * Set the hard, word-wrap enforcing ruler for the editor textarea.
+	 * 
+	 * @param {Number} n_chars Number of chars
+	 */
+	set_ruler(n_chars)
+	{
+		if(this.settings.ruler_offset == n_chars)
+		{
+			this.settings.ruler_offset = undefined
+		}
+		else
+		{
+			this.settings.ruler_offset = n_chars
+		}
+		this.render()
 	}
 
 	_on_settings_refresh()
@@ -324,6 +386,18 @@ class RegEditor extends Region
 		
 		// Loading state.
 		this.loading_layer.style.opacity = this.swyd.settings.page_loading ? "35%" : ""
+
+		// Ruler offset
+		if(this.settings.ruler_offset == undefined)
+		{
+			this.editor.textarea.removeAttribute('cols')
+			this.editor.textarea.classList.remove('wrap-bound')
+		}
+		else
+		{
+			this.editor.textarea.setAttribute('cols', this.settings.ruler_offset)
+			this.editor.textarea.classList.add('wrap-bound')
+		}
 	}
 
 }

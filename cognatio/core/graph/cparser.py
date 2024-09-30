@@ -23,6 +23,10 @@ class Link(TypedDict):
 
 class CognatioParser(HTMLParser):
 
+	def feed(self, html_str):
+		self.orig_html = html_str
+		super().feed(html_str)
+
 	def handle_starttag(self, tag: str, attrs: dict):
 		"""Extends an abstract hook. See super method docs for more info.
 		
