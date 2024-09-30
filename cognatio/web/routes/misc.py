@@ -16,7 +16,7 @@ from flask_login import current_user
 import urllib
 import os
 
-@current_app.route("/page_auth", methods=["GET", "POST"])
+@current_app.route("/auth/page", methods=["GET", "POST"])
 def page_auth():
 	"""Determine whether or not the logged-in user has access to a page.
 	"""

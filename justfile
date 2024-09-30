@@ -8,7 +8,8 @@ bundle:
 	esbuild {{client_nav}}/src/nav.js \
 		--bundle \
 		--outfile={{client_nav}}/bin/nav_{{cognatio_version}}.js \
-		--format=esm
+		--format=esm \
+		--keep-names
 	cp -R {{client_nav}}/bin/nav_{{cognatio_version}}.js {{client_nav}}/bin/nav.js
 
 # Deploy bundled source into correct destination in the static folder

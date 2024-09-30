@@ -1,6 +1,9 @@
-// cognatio/web/client/navigator/src/lib/regional.js
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
+
+// cognatio/web/client/navigator/src/lib/regional.js
+var __defProp2 = Object.defineProperty;
+var __name2 = /* @__PURE__ */ __name((target, value) => __defProp2(target, "name", { value, configurable: true }), "__name");
 function blob_md5(blob) {
   return new Promise((res, rej) => {
     blob.arrayBuffer().then((bbytes) => {
@@ -15,20 +18,24 @@ function blob_md5(blob) {
   });
 }
 __name(blob_md5, "blob_md5");
+__name2(blob_md5, "blob_md5");
 var hexcase = 0;
 var b64pad = "";
 function hex_md5(s) {
   return rstr2hex(rstr_md5(str2rstr_utf8(s)));
 }
 __name(hex_md5, "hex_md5");
+__name2(hex_md5, "hex_md5");
 function b64_md5(s) {
   return rstr2b64(rstr_md5(str2rstr_utf8(s)));
 }
 __name(b64_md5, "b64_md5");
+__name2(b64_md5, "b64_md5");
 function rstr_md5(s) {
   return binl2rstr(binl_md5(rstr2binl(s), s.length * 8));
 }
 __name(rstr_md5, "rstr_md5");
+__name2(rstr_md5, "rstr_md5");
 function rstr2hex(input) {
   try {
     hexcase;
@@ -45,6 +52,7 @@ function rstr2hex(input) {
   return output;
 }
 __name(rstr2hex, "rstr2hex");
+__name2(rstr2hex, "rstr2hex");
 function rstr2b64(input) {
   try {
     b64pad;
@@ -64,6 +72,7 @@ function rstr2b64(input) {
   return output;
 }
 __name(rstr2b64, "rstr2b64");
+__name2(rstr2b64, "rstr2b64");
 function str2rstr_utf8(input) {
   var output = "";
   var i = -1;
@@ -99,6 +108,7 @@ function str2rstr_utf8(input) {
   return output;
 }
 __name(str2rstr_utf8, "str2rstr_utf8");
+__name2(str2rstr_utf8, "str2rstr_utf8");
 function rstr2binl(input) {
   var output = Array(input.length >> 2);
   for (var i = 0; i < output.length; i++)
@@ -108,6 +118,7 @@ function rstr2binl(input) {
   return output;
 }
 __name(rstr2binl, "rstr2binl");
+__name2(rstr2binl, "rstr2binl");
 function binl2rstr(input) {
   var output = "";
   for (var i = 0; i < input.length * 32; i += 8)
@@ -115,6 +126,7 @@ function binl2rstr(input) {
   return output;
 }
 __name(binl2rstr, "binl2rstr");
+__name2(binl2rstr, "binl2rstr");
 function binl_md5(x, len) {
   x[len >> 5] |= 128 << len % 32;
   x[(len + 64 >>> 9 << 4) + 14] = len;
@@ -199,36 +211,44 @@ function binl_md5(x, len) {
   return Array(a, b, c, d);
 }
 __name(binl_md5, "binl_md5");
+__name2(binl_md5, "binl_md5");
 function md5_cmn(q, a, b, x, s, t) {
   return safe_add(bit_rol(safe_add(safe_add(a, q), safe_add(x, t)), s), b);
 }
 __name(md5_cmn, "md5_cmn");
+__name2(md5_cmn, "md5_cmn");
 function md5_ff(a, b, c, d, x, s, t) {
   return md5_cmn(b & c | ~b & d, a, b, x, s, t);
 }
 __name(md5_ff, "md5_ff");
+__name2(md5_ff, "md5_ff");
 function md5_gg(a, b, c, d, x, s, t) {
   return md5_cmn(b & d | c & ~d, a, b, x, s, t);
 }
 __name(md5_gg, "md5_gg");
+__name2(md5_gg, "md5_gg");
 function md5_hh(a, b, c, d, x, s, t) {
   return md5_cmn(b ^ c ^ d, a, b, x, s, t);
 }
 __name(md5_hh, "md5_hh");
+__name2(md5_hh, "md5_hh");
 function md5_ii(a, b, c, d, x, s, t) {
   return md5_cmn(c ^ (b | ~d), a, b, x, s, t);
 }
 __name(md5_ii, "md5_ii");
+__name2(md5_ii, "md5_ii");
 function safe_add(x, y) {
   var lsw = (x & 65535) + (y & 65535);
   var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
   return msw << 16 | lsw & 65535;
 }
 __name(safe_add, "safe_add");
+__name2(safe_add, "safe_add");
 function bit_rol(num2, cnt) {
   return num2 << cnt | num2 >>> 32 - cnt;
 }
 __name(bit_rol, "bit_rol");
+__name2(bit_rol, "bit_rol");
 function sentry_setup(dev_mode, sentry_url) {
   if (!dev_mode) {
     console.log("Starting browser in non-development mode. Launching SentryIO");
@@ -238,18 +258,21 @@ function sentry_setup(dev_mode, sentry_url) {
   }
 }
 __name(sentry_setup, "sentry_setup");
+__name2(sentry_setup, "sentry_setup");
 function bindify_console() {
   console.todo = function(msg) {
     console.log("%c//TODO: " + msg, "color: #6a9955");
   };
 }
 __name(bindify_console, "bindify_console");
+__name2(bindify_console, "bindify_console");
 function bindify_number() {
   Number.prototype.clamp = function(min, max) {
     return Math.min(Math.max(this, min), max);
   };
 }
 __name(bindify_number, "bindify_number");
+__name2(bindify_number, "bindify_number");
 function generate_hash() {
   var result = "";
   var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -260,34 +283,39 @@ function generate_hash() {
   return result;
 }
 __name(generate_hash, "generate_hash");
+__name2(generate_hash, "generate_hash");
 function checksum_json(data2) {
   return b64_md5(JSON.stringify(data2));
 }
 __name(checksum_json, "checksum_json");
+__name2(checksum_json, "checksum_json");
 function validate_email(email) {
   const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(String(email).toLowerCase());
 }
 __name(validate_email, "validate_email");
+__name2(validate_email, "validate_email");
 function download_file(src_url, file_name) {
   var $dl = $("<a></a>").attr("href", src_url).attr("download", file_name == void 0 ? "download_file" : file_name).css("display", "none");
   $("body").append($dl);
   $dl.get(0).click();
 }
 __name(download_file, "download_file");
+__name2(download_file, "download_file");
 function str_locations(substring, string) {
   var a = [], i = -1;
   while ((i = string.indexOf(substring, i + 1)) >= 0) a.push(i);
   return a;
 }
 __name(str_locations, "str_locations");
+__name2(str_locations, "str_locations");
 function serial_promises(promise_fns) {
   if (promise_fns[0] instanceof Promise) throw new Error(
     "serial_promises() takes a list of functions that return promises, not a list of actual promises."
   );
   let out_list = [];
   return new Promise((res, rej) => {
-    let fn = /* @__PURE__ */ __name((index) => {
+    let fn = /* @__PURE__ */ __name2((index) => {
       promise_fns[index]().then((out2) => {
         out_list.push(out2);
         if (index + 1 < promise_fns.length) {
@@ -301,6 +329,7 @@ function serial_promises(promise_fns) {
   });
 }
 __name(serial_promises, "serial_promises");
+__name2(serial_promises, "serial_promises");
 function path_ext(fpath) {
   let name = fpath.split("/").pop();
   if (name.indexOf(".") == -1) return void 0;
@@ -308,6 +337,7 @@ function path_ext(fpath) {
   return ext;
 }
 __name(path_ext, "path_ext");
+__name2(path_ext, "path_ext");
 var _throttle_memspace = {};
 function throttle_leading(min_delay_ms, fn) {
   const fnid = generate_hash();
@@ -321,13 +351,18 @@ function throttle_leading(min_delay_ms, fn) {
   };
 }
 __name(throttle_leading, "throttle_leading");
+__name2(throttle_leading, "throttle_leading");
 function linterp(x1, x2, y1, y2, x) {
   return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
 }
 __name(linterp, "linterp");
+__name2(linterp, "linterp");
 var ColorUtil = class _ColorUtil {
   static {
-    __name(this, "ColorUtil");
+    __name(this, "_ColorUtil");
+  }
+  static {
+    __name2(this, "ColorUtil");
   }
   /**
    * Tries to convert a color name to rgb/a hex representation
@@ -527,13 +562,13 @@ var ColorUtil = class _ColorUtil {
       hsva: /^((hsva)|hsv)[\D]+([\d.]+)[\D]+([\d.]+)[\D]+([\d.]+)[\D]*?([\d.]+|$)/i,
       hexa: /^#?(([\dA-Fa-f]{3,4})|([\dA-Fa-f]{6})|([\dA-Fa-f]{8}))$/i
     };
-    const numarize = /* @__PURE__ */ __name((array) => array.map((v) => /^(|\d+)\.\d+|\d+$/.test(v) ? Number(v) : void 0), "numarize");
+    const numarize = /* @__PURE__ */ __name2((array) => array.map((v) => /^(|\d+)\.\d+|\d+$/.test(v) ? Number(v) : void 0), "numarize");
     let match;
     invalid: for (const type in regex) {
       if (!(match = regex[type].exec(str))) {
         continue;
       }
-      const alphaValid = /* @__PURE__ */ __name((a) => !!match[2] === (typeof a === "number"), "alphaValid");
+      const alphaValid = /* @__PURE__ */ __name2((a) => !!match[2] === (typeof a === "number"), "alphaValid");
       switch (type) {
         case "cmyk": {
           const [, c, m, y, k] = numarize(match);
@@ -603,6 +638,7 @@ function css_selector_exists(rule_or_selector) {
   return false;
 }
 __name(css_selector_exists, "css_selector_exists");
+__name2(css_selector_exists, "css_selector_exists");
 function css_inject(rule) {
   let regss;
   document.adoptedStyleSheets.forEach((ss) => {
@@ -616,6 +652,7 @@ function css_inject(rule) {
   regss.insertRule(rule, regss.cssRules.length);
 }
 __name(css_inject, "css_inject");
+__name2(css_inject, "css_inject");
 function css_format_as_rule(selector, style_data, nested) {
   let style_line = selector + " {";
   for (const [propname, propval] of Object.entries(style_data)) {
@@ -634,9 +671,13 @@ function css_format_as_rule(selector, style_data, nested) {
   return style_line;
 }
 __name(css_format_as_rule, "css_format_as_rule");
+__name2(css_format_as_rule, "css_format_as_rule");
 var Clipboard = class {
   static {
     __name(this, "Clipboard");
+  }
+  static {
+    __name2(this, "Clipboard");
   }
   /**
    * Setup the app-wide clipboard and selection. Only components can be copied to the clipboard.
@@ -656,7 +697,7 @@ var Clipboard = class {
     this.selection = {
       components: [],
       // The components currently selected (not copies, instances)
-      callback: /* @__PURE__ */ __name(() => {
+      callback: /* @__PURE__ */ __name2(() => {
       }, "callback")
       // Called when a selection is performed
     };
@@ -834,7 +875,10 @@ var Clipboard = class {
 };
 var RHElement = class _RHElement extends HTMLElement {
   static {
-    __name(this, "RHElement");
+    __name(this, "_RHElement");
+  }
+  static {
+    __name2(this, "RHElement");
   }
   // Typehint declarations.
   /** @description Add a custom place to put data, tied to only one key to prevent collisions. */
@@ -937,6 +981,9 @@ var RHElement = class _RHElement extends HTMLElement {
 var Fabricator = class {
   static {
     __name(this, "Fabricator");
+  }
+  static {
+    __name2(this, "Fabricator");
   }
   /**
    * Instantiate a new Fabricator instance with the provided HTML.
@@ -1114,7 +1161,7 @@ var Fabricator = class {
    * Investigate this.dom to discover all 'rfm_members' within. This will populate this._members.
    */
   _members_discover() {
-    let traverse = /* @__PURE__ */ __name((el) => {
+    let traverse = /* @__PURE__ */ __name2((el) => {
       for (const child of el.children) {
         if (child.hasAttribute("rfm_member")) {
           this._members[child.getAttribute("rfm_member")] = RHElement.wrap(child);
@@ -1129,6 +1176,9 @@ var RegionalStructureError = class extends Error {
   static {
     __name(this, "RegionalStructureError");
   }
+  static {
+    __name2(this, "RegionalStructureError");
+  }
   constructor(message, options) {
     super(message, options);
   }
@@ -1136,6 +1186,9 @@ var RegionalStructureError = class extends Error {
 var FabricatorError = class extends Error {
   static {
     __name(this, "FabricatorError");
+  }
+  static {
+    __name2(this, "FabricatorError");
   }
   /**
    * Create a new fabricator error.
@@ -1149,7 +1202,10 @@ var FabricatorError = class extends Error {
 };
 var TODOError2 = class extends Error {
   static {
-    __name(this, "TODOError");
+    __name(this, "TODOError2");
+  }
+  static {
+    __name2(this, "TODOError");
   }
   constructor(message, options) {
     super(message, options);
@@ -1158,6 +1214,9 @@ var TODOError2 = class extends Error {
 var Component = class {
   static {
     __name(this, "Component");
+  }
+  static {
+    __name2(this, "Component");
   }
   /** @type {*} The ID for the record this component models. */
   id;
@@ -1222,6 +1281,9 @@ var Component = class {
 var DataHandler = class {
   static {
     __name(this, "DataHandler");
+  }
+  static {
+    __name2(this, "DataHandler");
   }
   /** @type {Object} This is where all local data for this DataHandler is stored. */
   _data;
@@ -1300,6 +1362,9 @@ var DataHandler = class {
 var DHTabular = class extends DataHandler {
   static {
     __name(this, "DHTabular");
+  }
+  static {
+    __name2(this, "DHTabular");
   }
   /** @type {Object} A place for local 'settings' to tie to a record */
   _settings;
@@ -1437,6 +1502,9 @@ var ErrorREST = class extends Error {
   static {
     __name(this, "ErrorREST");
   }
+  static {
+    __name2(this, "ErrorREST");
+  }
   /**
    * Construct an error to raise when a REST operation fails. This will just auto-format the error message
    * and add specified fields to the error for upstream reading.
@@ -1457,6 +1525,9 @@ var ErrorREST = class extends Error {
 var DHREST = class extends DHTabular {
   static {
     __name(this, "DHREST");
+  }
+  static {
+    __name2(this, "DHREST");
   }
   /** @type {URL} The url at which access to this API is made */
   api_url;
@@ -2052,7 +2123,10 @@ var DHREST = class extends DHTabular {
 };
 var Region = class _Region {
   static {
-    __name(this, "Region");
+    __name(this, "_Region");
+  }
+  static {
+    __name2(this, "Region");
   }
   /** Get how long the mouse must hover over a tooltip to show it, in seconds.*/
   static get tooltip_hover_time() {
@@ -2580,6 +2654,9 @@ var RegOneChoice = class extends Region {
   static {
     __name(this, "RegOneChoice");
   }
+  static {
+    __name2(this, "RegOneChoice");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -2687,6 +2764,9 @@ var RegOneChoice = class extends Region {
 var RegTwoChoice = class extends Region {
   static {
     __name(this, "RegTwoChoice");
+  }
+  static {
+    __name2(this, "RegTwoChoice");
   }
   fab_get() {
     let css = (
@@ -2818,6 +2898,9 @@ var RegTwoChoice = class extends Region {
 var RegIn = class extends Region {
   static {
     __name(this, "RegIn");
+  }
+  static {
+    __name2(this, "RegIn");
   }
   /** @type {Number} If undefined, debouncer is disabled. If defined, the debouncer duration in seconds. */
   _debouncer_duration;
@@ -3048,6 +3131,9 @@ var RegInInput = class extends RegIn {
   static {
     __name(this, "RegInInput");
   }
+  static {
+    __name2(this, "RegInInput");
+  }
   /** @type {RHElement} The input tag reference */
   input;
   fab_get() {
@@ -3134,6 +3220,9 @@ var RegInCheckbox = class extends RegIn {
   static {
     __name(this, "RegInCheckbox");
   }
+  static {
+    __name2(this, "RegInCheckbox");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -3204,6 +3293,9 @@ var RegInCheckbox = class extends RegIn {
 var RadioGroup = class {
   static {
     __name(this, "RadioGroup");
+  }
+  static {
+    __name2(this, "RadioGroup");
   }
   /** @type {RegionSwitchyard} */
   swyd;
@@ -3319,7 +3411,10 @@ var RadioGroup = class {
 };
 var RegInTextArea = class _RegInTextArea extends RegIn {
   static {
-    __name(this, "RegInTextArea");
+    __name(this, "_RegInTextArea");
+  }
+  static {
+    __name2(this, "RegInTextArea");
   }
   /** @type {RHElement} */
   textarea;
@@ -3627,6 +3722,9 @@ var DispatchClientJS = class {
   static {
     __name(this, "DispatchClientJS");
   }
+  static {
+    __name2(this, "DispatchClientJS");
+  }
   /**
    * Initialize a dispatch client which can communicate with a central dispatch server. This client will be assigned
    * a unique session id and all requests to the server will have this ID associated with it.
@@ -3914,6 +4012,9 @@ var RegionSwitchyard = class extends Region {
   static {
     __name(this, "RegionSwitchyard");
   }
+  static {
+    __name2(this, "RegionSwitchyard");
+  }
   /**
    * Instantiate a new Switchyard region. A webapp should have only one instance of this for a page at
    * a time.
@@ -4034,7 +4135,6 @@ var RegionSwitchyard = class extends Region {
       this._loading = false;
       this.on_load_complete();
       this._call_on_load.forEach((fn) => fn());
-      this._anchor_on_hash_change(0);
       this.render();
     }).catch((e) => {
       this.on_load_failed(e);
@@ -4330,6 +4430,9 @@ var RegionSwitchyard = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_in_cb_lever.js
 var RegInCBLever = class extends RegInCheckbox {
+  static {
+    __name(this, "RegInCBLever");
+  }
   /** @type {RHElement} The input with type="checkbox" */
   checkbox;
   /** @type {RHElement} The input container <div> */
@@ -4451,6 +4554,9 @@ var RegInCBLever = class extends RegInCheckbox {
 
 // cognatio/web/client/navigator/src/regs/reg_in_cb_typeset.js
 var RegInCBTypeset = class extends RegInCheckbox {
+  static {
+    __name(this, "RegInCBTypeset");
+  }
   /** @type {RHElement} The input with type="checkbox" */
   checkbox;
   /** @type {RHElement} The input container <div> */
@@ -4511,6 +4617,9 @@ var RegInCBTypeset = class extends RegInCheckbox {
 
 // cognatio/web/client/navigator/src/regs/reg_one_choice.js
 var RegOneChoiceNav = class extends RegOneChoice {
+  static {
+    __name(this, "RegOneChoiceNav");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -4563,6 +4672,9 @@ var RegOneChoiceNav = class extends RegOneChoice {
 
 // cognatio/web/client/navigator/src/regs/reg_two_choice.js
 var RegTwoChoiceNav = class extends RegTwoChoice {
+  static {
+    __name(this, "RegTwoChoiceNav");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -4617,6 +4729,9 @@ var RegTwoChoiceNav = class extends RegTwoChoice {
 
 // cognatio/web/client/navigator/src/regs/reg_sw_nav.js
 var RegSWNav = class extends RegionSwitchyard {
+  static {
+    __name(this, "RegSWNav");
+  }
   constructor() {
     super();
     this.dispatch_config.load_functions = 1;
@@ -4732,7 +4847,9 @@ var RegSWNav = class extends RegionSwitchyard {
     /** @description Whether or not the map is enabled. If enabled, files and editor are disabled. */
     map_enabled: void 0,
     /** @description True when a page is actively loading in. Referenced by many child regions.*/
-    page_loading: void 0
+    page_loading: void 0,
+    /** @description The hash that was last used to set a page */
+    last_hash: void 0
   };
   /** @type {RHElement} */
   cont_scroll;
@@ -4841,6 +4958,7 @@ var RegSWNav = class extends RegionSwitchyard {
         res();
       }, 1e3);
     });
+    let page;
     return this.dh_page_resource.track_all().catch((e) => {
       if (e instanceof ErrorREST && e.data.http_code == 403) {
         let prom;
@@ -4869,7 +4987,7 @@ var RegSWNav = class extends RegionSwitchyard {
       return this.dh_page.pull();
     }).then(() => {
       this.settings.page_id = id2;
-      let page = this.dh_page.comp_get(id2);
+      page = this.dh_page.comp_get(id2);
       this.dh_page_content.track(id2, page.page_url);
       this.reg_coords.settings.local_page_name = page.name;
     }).then(() => {
@@ -4883,6 +5001,7 @@ var RegSWNav = class extends RegionSwitchyard {
     }).then(() => {
       return this.dh_edge.pull();
     }).then(() => {
+      if (window.location.hash != "") window.location.hash = page.name;
       this.settings.page_loading = false;
       this.render();
     }).catch((e) => {
@@ -5006,6 +5125,18 @@ var RegSWNav = class extends RegionSwitchyard {
   on_load_complete() {
     this.page_set(this.settings.page_id);
     this.reg_loading.fade_out();
+    window.addEventListener("hashchange", () => {
+      if (window.location.hash == this.settings.last_hash) return;
+      this._select_default_page().then((id2) => {
+        this.settings.last_hash = window.location.hash;
+        return this.page_set(id2);
+      });
+    });
+    if (this.settings.page_id != void 0) {
+      let page = this.dh_page.comp_get(this.settings.page_id);
+      this.settings.last_hash = "#" + page.name;
+      window.location.hash = page.name;
+    }
   }
   on_load_failed(e) {
     this.reg_one_choice.present_message(
@@ -5016,8 +5147,9 @@ var RegSWNav = class extends RegionSwitchyard {
   /**
    * This will determine what the 'default' page should be. The logic is as follows:
    * 1. Use the page in the current browser URL. If we're at /nav, then:
-   * 2. Use this.default_page_name. If that does not exist, then:
-   * 3. Return undefined.
+   * 2. Check if there's an anchor. If not,
+   * 3. Use this.default_page_name. If that does not exist, then:
+   * 4. Return undefined.
    * 
    * @returns {Promise} That will resolve with ID or undefined.
    */
@@ -5026,6 +5158,8 @@ var RegSWNav = class extends RegionSwitchyard {
       let page_name;
       if (String(window.location.pathname).includes("/page/")) {
         page_name = window.location.pathname.split("/").pop().split(".").pop();
+      } else if (window.location.hash.length > 0) {
+        page_name = window.location.hash.replace("#", "");
       } else {
         page_name = this.default_page_name;
       }
@@ -5073,6 +5207,9 @@ var RegSWNav = class extends RegionSwitchyard {
 
 // cognatio/web/client/navigator/src/regs/reg_map.js
 var RegMap = class extends Region {
+  static {
+    __name(this, "RegMap");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -5582,6 +5719,9 @@ var RegMap = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_viewport.js
 var RegViewport = class extends Region {
+  static {
+    __name(this, "RegViewport");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -5662,6 +5802,9 @@ var RegViewport = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_editor.js
 var RegEditor = class extends Region {
+  static {
+    __name(this, "RegEditor");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -5952,6 +6095,9 @@ var RegEditor = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_resources.js
 var RegResources = class extends Region {
+  static {
+    __name(this, "RegResources");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -6253,9 +6399,9 @@ var RegResources = class extends Region {
 		`
     );
     let fab = new Fabricator(html).fabricate();
-    let create = () => {
+    let create = /* @__PURE__ */ __name(() => {
       this.swyd.reg_resource_new.activate();
-    };
+    }, "create");
     fab.get_member("create").addEventListener("click", create);
     fab.get_member("icon").addEventListener("click", create);
     return fab.get_member("filebox");
@@ -6285,6 +6431,9 @@ var RegResources = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_coords.js
 var RegCoords = class extends Region {
+  static {
+    __name(this, "RegCoords");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -6447,6 +6596,9 @@ var RegCoords = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_controls.js
 var RegControls = class extends Region {
+  static {
+    __name(this, "RegControls");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -6626,6 +6778,9 @@ var RegControls = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_page_new.js
 var RegNewPage = class _RegNewPage extends Region {
+  static {
+    __name(this, "RegNewPage");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -6671,7 +6826,8 @@ var RegNewPage = class _RegNewPage extends Region {
 					</div>
 					<div class='cont-mid'>
 						<div class='line underline'>
-							<label rfm_member='regin_page_name_cont'>Name: </label>
+							Name: 
+							<label style='margin-left: 0.5em' rfm_member='regin_page_name_cont'></label>
 						</div>
 						<div class='line underline'>
 							
@@ -6823,6 +6979,7 @@ var RegNewPage = class _RegNewPage extends Region {
         return char.charCodeAt(0).toString(2);
       }).join(" ");
     }
+    __name(text2Binary, "text2Binary");
     let binstr = text2Binary(str_data);
     let punchrow = document.createElement("div");
     punchrow.classList.add("punchrow");
@@ -6858,6 +7015,9 @@ var RegNewPage = class _RegNewPage extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_page_alter.js
 var RegAlterPage = class extends Region {
+  static {
+    __name(this, "RegAlterPage");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -6904,7 +7064,8 @@ var RegAlterPage = class extends Region {
 					</div>
 					<div class='cont-mid'>
 						<div class='line underline'>
-							<label rfm_member='regin_page_name_cont'>Name: </label>
+							Name:
+							<label style='margin-left: 0.5em' rfm_member='regin_page_name_cont'></label>
 						</div>
 						<div class='line underline'>
 							
@@ -7040,6 +7201,9 @@ var RegAlterPage = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_resource_new.js
 var RegResourceNew = class extends Region {
+  static {
+    __name(this, "RegResourceNew");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -7206,10 +7370,10 @@ var RegResourceNew = class extends Region {
         rej();
         return;
       }
-      let prog_update = (prog) => {
+      let prog_update = /* @__PURE__ */ __name((prog) => {
         this.settings.progress = prog;
         this.render();
-      };
+      }, "prog_update");
       this.swyd.dh_page_resource.create(name, this.settings.file, prog_update).then(() => {
         this.swyd.render();
         this.deactivate();
@@ -7253,6 +7417,9 @@ var RegResourceNew = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_loading.js
 var RegLoading = class extends Region {
+  static {
+    __name(this, "RegLoading");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -7311,6 +7478,9 @@ var RegLoading = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_constellation.js
 var RegConstellation = class extends Region {
+  static {
+    __name(this, "RegConstellation");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -7565,9 +7735,9 @@ var RegConstellation = class extends Region {
    * @param {Number} upscale Amount to upscale native network coordsys by for viewing
    */
   _draw_network(network, el, upscale) {
-    let scaler = (vec) => {
+    let scaler = /* @__PURE__ */ __name((vec) => {
       return vec.mult_scalar(upscale);
-    };
+    }, "scaler");
     Object.values(network.edges).forEach((edge) => {
       el.append(this._draw_edge(
         scaler(edge.node_orig.pos),
@@ -7766,6 +7936,9 @@ var RegConstellation = class extends Region {
 
 // cognatio/web/client/navigator/src/regs/reg_login.js
 var RegLogin = class extends Region {
+  static {
+    __name(this, "RegLogin");
+  }
   fab_get() {
     let css = (
       /* css */
@@ -8074,12 +8247,12 @@ var RegLogin = class extends Region {
     this.btn_new.addEventListener("click", () => {
       this.create();
     });
-    let enter_listener = (action, e) => {
+    let enter_listener = /* @__PURE__ */ __name((action, e) => {
       if (e.code == "Enter") {
         e.preventDefault();
         action.bind(this)();
       }
-    };
+    }, "enter_listener");
     this.regin_login_email.member_get("input").addEventListener("keydown", enter_listener.bind(this, this.login));
     this.regin_login_password.member_get("input").addEventListener("keydown", enter_listener.bind(this, this.login));
     this.regin_new_email.member_get("input").addEventListener("keydown", enter_listener.bind(this, this.create));
@@ -8173,6 +8346,9 @@ var RegLogin = class extends Region {
 
 // cognatio/web/client/navigator/src/comps/comp_page.js
 var CompPage = class extends Component {
+  static {
+    __name(this, "CompPage");
+  }
   /**
    * @returns {String} the name of this page
    */
@@ -8199,6 +8375,9 @@ var icon_map = {
   "unknown": "/nav/assets/icons/file_unknown.svg"
 };
 var CompFile = class extends Component {
+  static {
+    __name(this, "CompFile");
+  }
   /**
    * @returns {String} Extension for this file, parsed from filename.
    */
@@ -8227,6 +8406,9 @@ var CompFile = class extends Component {
 
 // cognatio/web/client/navigator/src/comps/comp_edge.js
 var CompEdge = class extends Component {
+  static {
+    __name(this, "CompEdge");
+  }
 };
 
 // cognatio/web/client/navigator/src/dh/dh_page.js
@@ -8236,6 +8418,9 @@ var PageAccessMode = {
   PRIVATE: 2
 };
 var DHPage = class extends DHREST {
+  static {
+    __name(this, "DHPage");
+  }
   constructor() {
     super("/api/v1/page");
   }
@@ -8280,6 +8465,9 @@ var DHPage = class extends DHREST {
 
 // cognatio/web/client/navigator/src/dh/dh_page_content.js
 var DHPageContent = class extends DataHandler {
+  static {
+    __name(this, "DHPageContent");
+  }
   /** @type {RegSWNav} */
   swyd;
   /** @type {String} The URL that was last pull()'d with. */
@@ -8432,6 +8620,9 @@ var DHPageContent = class extends DataHandler {
 
 // cognatio/web/client/navigator/src/dh/dh_page_resource.js
 var DHPageResource = class extends DHREST {
+  static {
+    __name(this, "DHPageResource");
+  }
   /** @type {Number} The ID of the page that this datahandler is looking at the resources of. */
   current_page_id;
   /** @type {Number} The max size of a payload that will be sent in a single request. */
@@ -8477,8 +8668,8 @@ var DHPageResource = class extends DHREST {
    * @returns {Promise} That will resolve when the file has been uploaded and verified.
    */
   async create(file_name, file, prog_cb) {
-    if (!prog_cb) prog_cb = () => {
-    };
+    if (!prog_cb) prog_cb = /* @__PURE__ */ __name(() => {
+    }, "prog_cb");
     return new Promise((res, rej) => {
       let promise_fns = [];
       let start_loc = 0;
@@ -8558,6 +8749,9 @@ var DHPageResource = class extends DHREST {
 
 // cognatio/web/client/navigator/src/dh/dh_edge.js
 var DHEdge = class extends DHREST {
+  static {
+    __name(this, "DHEdge");
+  }
   constructor() {
     super("/api/v1/edge");
   }
@@ -8629,6 +8823,9 @@ var HTML_STUBS = {
 
 // cognatio/web/client/navigator/src/etc/vector.js
 var Vector2D = class _Vector2D {
+  static {
+    __name(this, "Vector2D");
+  }
   /**
    * Instantiate a new vector quantity.
    * 
@@ -8755,6 +8952,9 @@ var Vector2D = class _Vector2D {
 
 // cognatio/web/client/navigator/src/etc/network.js
 var Network = class _Network {
+  static {
+    __name(this, "Network");
+  }
   /**
    * Instantiate a new Network instance. All provided data will be safely de-referenced and truly copied to
    * prevent accidental back-modification in, for example, a datahandler.
@@ -9219,7 +9419,7 @@ var Network = class _Network {
 };
 
 // cognatio/web/client/navigator/src/etc/paths.js
-var url_is_internal = (url_string) => {
+var url_is_internal = /* @__PURE__ */ __name((url_string) => {
   let url;
   try {
     url = new URL(url_string);
@@ -9227,8 +9427,8 @@ var url_is_internal = (url_string) => {
     return true;
   }
   return url.origin === window.origin;
-};
-var url_to_page_name = (url_string) => {
+}, "url_is_internal");
+var url_to_page_name = /* @__PURE__ */ __name((url_string) => {
   if (!url_is_internal(url_string)) return void 0;
   let url;
   try {
@@ -9241,7 +9441,7 @@ var url_to_page_name = (url_string) => {
   let fname = fname_bits[0];
   if (fname.length == "") return void 0;
   return fname;
-};
+}, "url_to_page_name");
 export {
   CompEdge,
   CompFile,

@@ -1,1 +1,6 @@
+# Cognatio stuff
 dev/
+
+# Python stuff
+__pycache__/
+*.py[cod]

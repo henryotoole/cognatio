@@ -42,7 +42,8 @@
 		// Infer page from location
 		let dirname = '/pages/',
 			path = String(window.location.pathname),
-			name = path.substring(path.indexOf(dirname) + dirname.length, path.indexOf(".html"))
+			i_html = path.indexOf(".html"),
+			name = path.substring(path.indexOf(dirname) + dirname.length, i_html > 0 ? i_html : undefined)
 		window.location = "/nav#" + name
 	}
 
