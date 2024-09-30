@@ -219,7 +219,7 @@ class RegEditor extends Region
 			{
 				// Don't try to save the web-page.
 				e.preventDefault()
-				this.code_apply()
+				this.code_upload()
 			}
 		})
 	}

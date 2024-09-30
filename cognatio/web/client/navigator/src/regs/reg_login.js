@@ -226,10 +226,10 @@ class RegLogin extends Region
 									<div class='title'> Navigator Login </div>
 									<div class='interface-rec'>
 										<div class='terminal input-line'>
-											<div rfm_member='login_email'></div>
+											<div rfm_member='login_email' name='email' autocomplete='email'></div>
 										</div>
 										<div class='terminal input-line'>
-											<div rfm_member='login_password'></div>
+											<div rfm_member='login_password' name='password' autocomplete='password'></div>
 										</div>
 									</div>
 									<div class='row'>

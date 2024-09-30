@@ -50,7 +50,7 @@ class RegNewPage extends Region
 					</div>
 					<div class='cont-mid'>
 						<div class='line underline'>
-							<label rfm_member='regin_page_name_cont'>Name: </label>
+							<label rfm_member='regin_page_name_cont'></label>
 						</div>
 						<div class='line underline'>
 							
@@ -176,12 +176,26 @@ class RegNewPage extends Region
 				return
 			}
 
-			this.swyd.dh_page.create(this.settings.page_read_access, name).then((new_id)=>
+			let promise_unsaved = Promise.resolve()
+			if(this.swyd.reg_editor.has_unsaved_changes)
 			{
-				return this.swyd.dispatch.call_server_function('page_set_content', new_id, HTML_STUBS.BASIC).then(()=>
-				{
-					return this.swyd.page_set(new_id)
-				})
+				promise_unsaved = this.swyd.reg_two_choice.present_choice(
+					"Unsaved Changes",
+					"There are changes in the editor that have not been pushed to the server. These changes " +
+					"will be lost if the Navigator jumps to a new page. Are you sure you wish to proceed?",
+					"No",
+					"Yes"
+				)
+			}
+			promise_unsaved.then(()=>
+			{
+				return this.swyd.dh_page.create(this.settings.page_read_access, name)
+			}).then((new_id)=>
+			{
+				return this.swyd.dispatch.call_server_function('page_set_content', new_id, HTML_STUBS.BASIC)
+			}).then(()=>
+			{
+				return this.swyd.page_set(new_id)
 			}).then(()=>
 			{
 				res()

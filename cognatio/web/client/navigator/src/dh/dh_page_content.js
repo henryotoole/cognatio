@@ -118,7 +118,8 @@ class DHPageContent extends DataHandler
 		return fetch(
 			this._tracked_page_url,
 			{
-				method: "GET"
+				method: "GET",
+				cache: "no-store"
 			}
 		).then((response)=>
 		{
