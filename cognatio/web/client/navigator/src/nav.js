@@ -9,6 +9,7 @@ export {RegOneChoiceNav} from "./regs/reg_one_choice.js"
 export {RegTwoChoiceNav} from "./regs/reg_two_choice.js"
 
 export {RegSWNav} from "./regs/reg_sw_nav.js"
+export {RegSWLogin} from "./regs/reg_sw_login.js"
 export {RegMap} from "./regs/reg_map.js"
 export {RegViewport} from "./regs/reg_viewport.js"
 export {RegEditor} from "./regs/reg_editor.js"

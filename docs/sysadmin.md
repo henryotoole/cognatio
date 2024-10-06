@@ -158,7 +158,9 @@ server {
 
 	# Connect all non-special routes to the flask server via gunicorn and a socket. 
 	location / {
-		etag on;
+		# For now, all caching is disabled here. It might be possible to add caching to speed up API calls,
+		# but that involves solving the deletion problem, which I have not done yet.
+		add_header 'Cache-Control' 'no-cache';
 		include proxy_params;
 		proxy_pass http://unix:/run/cognatio/cognatio.sock;
 		# Required for auth_request directive so that the URL can be parsed by flask.
@@ -172,6 +174,7 @@ server {
 		auth_request /auth/page;
 
 		etag on;
+		add_header 'Cache-Control' 'no-cache';
 		
 		alias {{YOUR_LOCAL_DIRECTORY}}/pages;
 		
@@ -182,18 +185,21 @@ server {
 	# Simply broadcast static local directory
 	location /sl {
 		etag on;
+		add_header 'Cache-Control' 'no-cache';
 		alias {{YOUR_LOCAL_DIRECTORY}}/static;
 	}
 
 	# Simply broadcast static directory
 	location /s {
 		etag on;
+		add_header 'Cache-Control' 'no-cache';
 		alias {{YOUR_INSTALL_DIRECTORY}}/cognatio/web/static;
 	}
 
 	# Simply broadcast nav static directory
 	location /nav/ {
 		etag on;
+		add_header 'Cache-Control' 'no-cache';
 		alias {{YOUR_INSTALL_DIRECTORY}}/cognatio/web/static/nav/;
 	}
 }
