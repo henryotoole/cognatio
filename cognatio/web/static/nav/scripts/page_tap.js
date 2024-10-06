@@ -11,12 +11,17 @@
 		has_activated: false
 	}
 
-	import("/nav/src/nav.js").then((module)=>
-	{
-		// No linting here, yet.
-		memspace.nav = module
+	// No need for this under the current redirect paradigm.
+	//import("/nav/src/nav.js").then((module)=>
+	//{
+	//	// No linting here, yet.
+	//	memspace.nav = module
+	//})
+	let init = ()=>
+	{	
 		bind_keys()
-	})
+		set_title()
+	}
 
 	/**
 	 * Bind the keypress that activates the navigator 'around' this webpage.
@@ -46,5 +51,21 @@
 			name = path.substring(path.indexOf(dirname) + dirname.length, i_html > 0 ? i_html : undefined)
 		window.location = "/nav#" + name
 	}
+
+	/**
+	 * Set the title of this page if it was not already set.
+	 */
+	let set_title = ()=>
+	{
+		if(document.title.length == 0)
+		{
+			let bits = window.location.pathname.split("/"),
+				fname = bits[bits.length - 1],
+				hname = fname.split(".")[0]
+			document.title = hname
+		}
+	}
+
+	init()
 
 })()

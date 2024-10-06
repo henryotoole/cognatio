@@ -4648,7 +4648,7 @@ var RegOneChoiceNav = class extends RegOneChoice {
 					overflow: hidden;
 					border: 1px solid var(--punchcard-beige-darker);
 
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 				& .text
 				{
@@ -4703,7 +4703,7 @@ var RegTwoChoiceNav = class extends RegTwoChoice {
 					overflow: hidden;
 					border: 1px solid var(--punchcard-beige-darker);
 
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 				& .text
 				{
@@ -5220,6 +5220,92 @@ var RegSWNav = class extends RegionSwitchyard {
   }
 };
 
+// cognatio/web/client/navigator/src/regs/reg_sw_login.js
+var RegSWLogin = class extends RegionSwitchyard {
+  static {
+    __name(this, "RegSWLogin");
+  }
+  constructor() {
+    super();
+    this.dispatch_config.load_functions = 1;
+  }
+  fab_get() {
+    let css = (
+      /* css */
+      `
+
+			[rfm_reg="RegSWLogin"] {
+
+				/* The 'parent' class here is the <body> */
+				overflow: hidden;
+
+				& .cont-master {
+					width: 100vw;
+					display: flex;
+					flex-direction: column;
+					align-items: flex-start;
+					justify-content: center;
+				}
+			}
+		`
+    );
+    let css_body = (
+      /* css */
+      `
+			body {margin: 0px}
+		`
+    );
+    let html = (
+      /* html */
+      `
+		<div rfm_member='cont_master' class='cont-master'>
+		</div>
+		`
+    );
+    return new Fabricator(html).add_css_rule(css).add_css_rule(css_body);
+  }
+  /** @description Settings object for this region. This is local data which is erased on page refresh. */
+  settings = {};
+  /** @type {RHElement} */
+  cont_master;
+  /** @type {RegLogin} */
+  reg_login;
+  _create_subregions() {
+    this.reg_loading = new RegLoading().fab().link(this, document.getElementById("reg_loading"));
+    this.reg_login = new RegLogin().fab().link(this, this.eth_reg_create()).etherealize();
+  }
+  async _create_datahandlers() {
+    this.dh_user = new DHREST("/api/v1/user", false, false);
+  }
+  on_load_complete() {
+    this.reg_login.activate();
+    this.reg_loading.fade_out();
+  }
+  on_load_failed(e) {
+    console.error(e);
+  }
+  /**
+   * Called when the user successfully logs in. Will redirect back to whatever page originated the login
+   * or to 'nav' if there's no originator.
+   * 
+   * @param {Number} user_id The user ID or undefined if not logged in.
+   * 
+   * @returns {Promise} That resolves when set operation is complete.
+   */
+  async set_user(user_id) {
+    let url = new URL(window.location), next = url.searchParams.get("next");
+    if (!next) {
+      next = "/nav";
+    }
+    window.location.href = next;
+    return Promise.resolve();
+  }
+  _on_settings_refresh() {
+  }
+  _on_render() {
+  }
+};
+
 // cognatio/web/client/navigator/src/regs/reg_map.js
 var RegMap = class extends Region {
   static {
@@ -5698,7 +5784,7 @@ var RegMap = class extends Region {
 					display: flex; align-items: center;
 
 					color: var(--ethblue-lightest);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					background-color: transparent;
 					user-select: none;
 					font-size: ${line_height}px;
@@ -5906,7 +5992,7 @@ var RegEditor = class extends Region {
 				textarea {
 					border: none;
 					white-space: pre;
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					font-size: 0.8em;
 					background-color: var(--white-off);
 				}
@@ -5927,7 +6013,7 @@ var RegEditor = class extends Region {
 				}
 				& .ruler-label {
 					color: var(--red-light);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					font-size: 0.7em;
 					padding-left: 0.2em;
 					cursor: pointer;
@@ -6362,7 +6448,7 @@ var RegResources = class extends Region {
 					align-items: flex-end;
 					justify-content: space-between;
 
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 				& .label-row.underline {
 					border-bottom: 1px solid var(--punchcard-beige-darker);
@@ -6372,7 +6458,7 @@ var RegResources = class extends Region {
 					max-height: 2.7em;
 					line-height: 1.37;
 					position: absolute; top: 0; left: 0;
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					text-wrap: wrap;
 					word-wrap: break-word;
 					overflow: hidden;
@@ -7327,7 +7413,7 @@ var RegResourceNew = class extends Region {
 				}
 				& .prog-bar {
 					color: var(--red);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 			}
 		`
@@ -7643,8 +7729,7 @@ var RegConstellation = class extends Region {
 				}
 				& .text-title {
 					font-size: 35px;
-					font-weight: 600;
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 			}
 		`
@@ -8103,7 +8188,7 @@ var RegLogin = class extends Region {
 					overflow: hidden;
 					
 					color: var(--brass-light);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 
 					border: 3px solid var(--brass);
 					background-color: var(--brass-lightest);
@@ -9577,6 +9662,7 @@ export {
   RegOneChoiceNav,
   RegResourceNew,
   RegResources,
+  RegSWLogin,
   RegSWNav,
   RegTwoChoiceNav,
   RegViewport,

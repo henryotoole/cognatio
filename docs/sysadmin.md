@@ -156,6 +156,11 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/{{YOUR_HOSTNAME}}/privkey.pem;
 	include /etc/nginx/snippets/ssl.conf;
 
+	# Set error pages
+	error_page 401 /s/html/utility/error_401.html?next=$request_uri;
+	error_page 403 /s/html/utility/error_403.html?next=$request_uri;
+	error_page 404 /s/html/utility/error_404.html;
+
 	# Connect all non-special routes to the flask server via gunicorn and a socket. 
 	location / {
 		# For now, all caching is disabled here. It might be possible to add caching to speed up API calls,
