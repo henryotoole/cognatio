@@ -70,14 +70,43 @@ class RegSWLogin extends RegionSwitchyard
 		this.reg_login = new RegLogin().fab().link(this, this.eth_reg_create()).etherealize()
 	}
 
+	async _create_datahandlers()
+	{
+		this.dh_user = new DHREST("/api/v1/user", false, false)
+	}
+
 	on_load_complete()
 	{
+		this.reg_login.activate()
 		this.reg_loading.fade_out()
 	}
 
 	on_load_failed(e)
 	{
 		console.error(e)
+	}
+
+	/**
+	 * Called when the user successfully logs in. Will redirect back to whatever page originated the login
+	 * or to 'nav' if there's no originator.
+	 * 
+	 * @param {Number} user_id The user ID or undefined if not logged in.
+	 * 
+	 * @returns {Promise} That resolves when set operation is complete.
+	 */
+	async set_user(user_id)
+	{
+		let url = new URL(window.location),
+			next = url.searchParams.get('next')
+			
+		if(!next)
+		{
+			next = "/nav"
+		}
+
+		window.location.href = next
+
+		return Promise.resolve()
 	}
 
 	_on_settings_refresh()

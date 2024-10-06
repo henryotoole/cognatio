@@ -91,7 +91,7 @@ class RegLogin extends Region
 					overflow: hidden;
 					
 					color: var(--brass-light);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 
 					border: 3px solid var(--brass);
 					background-color: var(--brass-lightest);

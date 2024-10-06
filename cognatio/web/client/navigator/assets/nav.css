@@ -255,7 +255,7 @@ machine {
 		
 		display: flex;
 		flex-direction: row;
-		font-family: "IBM Mono";
+		font-family: "IBMPlexMono";
 	}
 	
 	& .cb-lever-group {

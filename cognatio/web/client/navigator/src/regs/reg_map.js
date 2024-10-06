@@ -572,7 +572,7 @@ class RegMap extends Region
 					display: flex; align-items: center;
 
 					color: var(--ethblue-lightest);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					background-color: transparent;
 					user-select: none;
 					font-size: ${line_height}px;

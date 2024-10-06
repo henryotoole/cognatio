@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="/nav/assets/nav.css">
+		<link rel="stylesheet" href="/nav/assets/fonts.css">
+		<link rel="stylesheet" href="/nav/assets/error_pages.css">
+	</head>
+	<body>
+		<div class="cont-outer">
+			<div class="cont-inner">
+				<h2> Error 403 </h2>
+				<h1> Access Denied </h1>
+				<p> This page requires certain credentials to view which your account lacks. </p>
+				<button id="btn"> Change Account </button>
+			</div>
+		</div>
+	</body>
+	<script>
+		let btn = document.getElementById('btn'),
+			loc = new URL(window.location),
+			next = loc.searchParams.get('next')
+
+		if(!next) next = "/nav"
+
+		btn.addEventListener('click', ()=>{
+			window.location.href = "/login?next=" + next
+		})
+	</script>
+</html>

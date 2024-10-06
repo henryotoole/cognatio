@@ -110,8 +110,7 @@ class RegConstellation extends Region
 				}
 				& .text-title {
 					font-size: 35px;
-					font-weight: 600;
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 			}
 		`

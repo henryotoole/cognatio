@@ -20,3 +20,5 @@ Some specifics for this document
 General for project:
 + External links and external sites
 + Feedback-cycle 'markup' for pages in raw html. "Addons"
+
++ Adapt this to the cognatio project page when complete.

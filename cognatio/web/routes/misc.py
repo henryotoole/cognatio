@@ -45,8 +45,11 @@ def _page_auth(url):
 
 	# This function is as optimal as possible in terms of resource usage.
 	if page is None:
-		return "", 404
+		return "No such page.", 404
 	elif page.get_user_read_access(user_id):
 		return "", 200
 	else:
-		return "", 403
+		if not current_user.is_authenticated:
+			return "Not logged in", 401
+		else:
+			return "Not authorized for page", 403

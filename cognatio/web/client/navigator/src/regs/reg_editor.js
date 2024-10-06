@@ -98,7 +98,7 @@ class RegEditor extends Region
 				textarea {
 					border: none;
 					white-space: pre;
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					font-size: 0.8em;
 					background-color: var(--white-off);
 				}
@@ -119,7 +119,7 @@ class RegEditor extends Region
 				}
 				& .ruler-label {
 					color: var(--red-light);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					font-size: 0.7em;
 					padding-left: 0.2em;
 					cursor: pointer;
