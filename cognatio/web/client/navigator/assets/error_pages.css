@@ -1,0 +1,50 @@
+
+body {
+	background-color: var(--white-off);
+	color: var(--metal-grey);
+
+	font-family: "IBMPlexSans";
+}
+h1 {
+	font-size: 3em;
+	line-height: 1.5em;
+	margin-top: 0.375em; margin-bottom: 0.375em;
+}
+h1 {
+	font-size: 3em;
+	line-height: 1.5em;
+	margin-top: 0.375em; margin-bottom: 0.375em;
+}
+p {
+	font-size: 2em;
+	line-height: 1.5em;
+	margin-top: 0.75em; margin-bottom: 0.75em;
+}
+button {
+	border: 2px solid var(--metal-grey);
+	border-radius: 0.375em;
+	font-size: 2em;
+	line-height: 1.5em;
+	padding: 0.375em;
+}
+button:hover {
+	background-color: var(--punchcard-beige);
+}
+
+.cont-outer {
+	position: absolute;
+	width: 90vw; height: 100vh;
+
+	padding-left: 5vw;
+	padding-right: 5vw;
+	font-size: 16px;
+}
+.cont-inner {
+	max-width: 80ch;
+	margin-inline-start: auto;
+	margin-inline-end: auto;
+	padding-bottom: 3em;
+}
+.row {
+	width: 100%; display: flex; justify-content: center;
+}

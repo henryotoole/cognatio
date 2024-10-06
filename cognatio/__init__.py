@@ -13,7 +13,9 @@ import structlog
 import os
 import pathlib
 
-version = "1.0.0"
+# 1.0.0 original release
+# 1.0.1 add dedicated login and static HTML for redirect.
+version = "1.0.1"
 
 project_path = pathlib.Path(__file__).parent.parent.resolve()
 """This is the root path to the project and/or git repository. It contains cognatio/core, tests, et. al. Unlike

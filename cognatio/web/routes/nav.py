@@ -57,6 +57,17 @@ def nav_route():
 		cognatio_version=version
 	)
 
+@current_app.route('/login')
+def nav_route_login():
+	"""Directly serve the login html to load the nav app.
+	"""
+	# For dev and production, this file does not change location (e.g. it is not bundled or compiled)
+	return render_template(
+		os.path.join(project_path, "cognatio", "web", "client", "navigator", "src", "login.html"),
+		cognatio_config=cognatio_config,
+		cognatio_version=version
+	)
+
 @current_app.route("/nav/<path:path>")
 def dev_nav_dir(path):
 	"""Expose source files for /nav so that the client may be used during development directly from
@@ -123,7 +134,16 @@ def dev_page(path):
 	url = os.path.join('/page', path)
 	msg, code = _page_auth(url)
 
-	if(code != 200): return msg, code
+	if(code != 200):
+		# Mirror (some of) the Nginx pages
+		if(code == 401 or code==403):
+			return redirect(f'/s/html/utility/error_{code}.html?next={url}')
+		else:
+			return msg, code
+
+	# Add .html for pages
+	if len(url.split("/")) == 3 and (not '.html' in url):
+		path += ".html"
 
 	return send_from_directory(env.fpath_pages, path), 200
 

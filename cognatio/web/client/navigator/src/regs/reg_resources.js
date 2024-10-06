@@ -226,7 +226,7 @@ class RegResources extends Region
 					align-items: flex-end;
 					justify-content: space-between;
 
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 				& .label-row.underline {
 					border-bottom: 1px solid var(--punchcard-beige-darker);
@@ -236,7 +236,7 @@ class RegResources extends Region
 					max-height: 2.7em;
 					line-height: 1.37;
 					position: absolute; top: 0; left: 0;
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 					text-wrap: wrap;
 					word-wrap: break-word;
 					overflow: hidden;

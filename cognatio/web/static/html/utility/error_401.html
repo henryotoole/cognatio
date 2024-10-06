@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<link rel="stylesheet" href="/nav/assets/nav.css">
+		<link rel="stylesheet" href="/nav/assets/fonts.css">
+		<link rel="stylesheet" href="/nav/assets/error_pages.css">
+	</head>
+	<body>
+		<div class="cont-outer">
+			<div class="cont-inner">
+				<h2> Error 401 </h2>
+				<h1> Authorization Required </h1>
+				<p> This page requires an account to view. Log in or create an account to proceed. </p>
+				<button id="btn"> Login / Sign Up</button>
+			</div>
+		</div>
+	</body>
+	<script>
+		let btn = document.getElementById('btn'),
+			loc = new URL(window.location),
+			next = loc.searchParams.get('next')
+
+		if(!next) next = "/nav"
+
+		btn.addEventListener('click', ()=>{
+			window.location.href = "/login?next=" + next
+		})
+	</script>
+</html>

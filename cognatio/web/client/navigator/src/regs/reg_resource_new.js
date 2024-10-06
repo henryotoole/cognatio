@@ -46,7 +46,7 @@ class RegResourceNew extends Region
 				}
 				& .prog-bar {
 					color: var(--red);
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 			}
 		`

@@ -19,7 +19,7 @@ class RegTwoChoiceNav extends RegTwoChoice
 					overflow: hidden;
 					border: 1px solid var(--punchcard-beige-darker);
 
-					font-family: "IBM Mono";
+					font-family: "IBMPlexMono";
 				}
 				& .text
 				{
