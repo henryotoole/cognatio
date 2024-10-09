@@ -3733,6 +3733,113 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
     this.textarea.value = this.settings.value;
   }
 };
+var RegInSelect = class extends RegIn {
+  static {
+    __name(this, "RegInSelect");
+  }
+  static {
+    __name2(this, "RegInSelect");
+  }
+  fab_get() {
+    let html = (
+      /* html */
+      `
+			<select rfm_member="select" class="ris-select"></select>
+		`
+    );
+    return new Fabricator(html);
+  }
+  /** @type {RHElement} The <select> element */
+  select;
+  /**
+   * @param {Object} options Key/val pairs where keys are `<option> values` and vals are `<option> names`.
+   * 						   This argument is optional, and can be omitted if the select is linked by reference
+   * 						   to a list with link_options().
+   */
+  constructor(options) {
+    super();
+    this._value_update_handlers = [];
+    this._default_options = options || {};
+    this._opts_ref = void 0;
+    this._opts_key = void 0;
+  }
+  /**
+   * Perform linking operations for this region:
+   * + Link this region to its super-region and vice versa
+   * + Link this region to the specific element in webpage DOM that it represents.
+   * + Link this region to the switchyard and datahandlers and setup certain events.
+   * + Assign a unique in-memory ID for this region and set the reg_el's ID to the same.
+   * + Fabrication links (if fab() was called earlier), including links to this.$element and linking $elements
+   *   to the reg_el.
+   * 
+   * The additional final two parameters allow this input region to store its value by reference in a location
+   * of the implementor's choosing. This will most commonly be `superregion.settings` and `some_settings_key`.
+   * It could also, for example, refer to the Switchyard settings or some Component's settings. It could
+   * even be tied directly to data in a Datahandler!
+   * 
+   * @param {Region} reg_super The super (or parent) region that this region will be a subregion of.
+   * @param {HTMLElement} reg_el The main element for this region, which this region will be bound to.
+   * @param {Object} value_ref Reference to object in which region input value is stored. See above.
+   * @param {String} value_key The key in `value_ref` at which value is stored: `value_ref[value_key] = value`
+   * @param {Object} opts_ref OPTIONAL: Reference to object in which region option dict is stored.
+   * @param {String} opts_key OPTIONAL: The key in `opts_ref` at which option dict is stored: `opts_ref[opts_key] = opts`
+   * 
+   * @returns {this} itself for function call chaining
+   */
+  link(reg_super, reg_el, value_ref, value_key, opts_ref, opts_key) {
+    super.link(reg_super, reg_el, value_ref, value_key);
+    this._opts_ref = opts_ref;
+    this._opts_key = opts_key;
+    return this;
+  }
+  /**
+   * This is called after linking is complete. It is used here to bind events.
+   */
+  _on_link_post() {
+    this.select.addEventListener("change", () => {
+      this._view_alters_value(this.select.value);
+    });
+    this.render_checksum_add_tracked("regin_opt_ref", () => {
+      if (this._opts_ref == void 0) return 0;
+      return this._opts_ref[this._opts_key];
+    });
+  }
+  _on_settings_refresh() {
+    this.settings.value = void 0;
+    if (this._opts_ref != void 0) {
+      this.settings.options = this._opts_ref[this._opts_key];
+    } else {
+      this.settings.options = this._default_options;
+    }
+  }
+  /**
+   * Completely redraw this region and all active subregions. Overridden here to selectively pull from
+   * super-region settings value if it has changed from last time we pulled it.
+   */
+  render(force) {
+    if (this._opts_ref != void 0) {
+      this.settings.options = this._opts_ref[this._opts_key];
+    }
+    super.render(force);
+  }
+  _on_render() {
+    super._on_render();
+    this.select.empty();
+    let options = this.settings.options != void 0 ? this.settings.options : {};
+    Object.entries(options).forEach(([k, v]) => {
+      let opt = RHElement.wrap(document.createElement("option"));
+      opt.setAttribute("value", k);
+      opt.textContent = v;
+      opt.classList.add("ris-opt");
+      this.select.append(opt);
+    });
+    if (this.settings.value != "" && !options.hasOwnProperty(this.settings.value)) {
+      let k = Object.keys(options), v = k.length > 0 ? k[0] : "";
+      this._view_alters_value(v);
+    }
+    this.select.value = this.settings.value;
+  }
+};
 var DispatchClientJS = class {
   static {
     __name(this, "DispatchClientJS");
@@ -4864,7 +4971,11 @@ var RegSWNav = class extends RegionSwitchyard {
     /** @description True when a page is actively loading in. Referenced by many child regions.*/
     page_loading: void 0,
     /** @description The hash that was last used to set a page */
-    last_hash: void 0
+    last_hash: void 0,
+    /** @description The presets that are available when creating a new page. keys to names. */
+    presets: {},
+    /** @description The presets that are available when creating a new page. keys to rel url's. */
+    preset_urls: {}
   };
   /** @type {RHElement} */
   cont_scroll;
@@ -5041,6 +5152,22 @@ var RegSWNav = class extends RegionSwitchyard {
     this.render();
   }
   /**
+   * Use logic to determine what the overall title of this page should be. This is intended to be edge-triggered
+   * whenever a new page loads into the viewport. It's really not the best code and **definitely** needs to be
+   * refactored if setting title ever becomes more complex.
+   * 
+   * @param {String} iframe_title The iframe title, or undefined / "" if it doesn't have one.
+   */
+  set_title(sub_title) {
+    let title = "Cognatio";
+    if (sub_title != void 0 && sub_title.length != 0) {
+      title = sub_title;
+    } else if (this.settings.page_id != void 0 && this.dh_page.comp_get(this.settings.page_id) != void 0) {
+      title = this.dh_page.comp_get(this.settings.page_id).name;
+    }
+    document.title = title;
+  }
+  /**
    * Set the current logged-in user_id for this browser session. Sets in settings and edge triggers dh updates.
    * 
    * @param {Number} user_id The user ID or undefined if not logged in.
@@ -5139,6 +5266,15 @@ var RegSWNav = class extends RegionSwitchyard {
   }
   on_load_complete() {
     this.page_set(this.settings.page_id);
+    this.dispatch.call_server_function("page_get_presets").then((presets) => {
+      this.settings.preset_urls = presets;
+      this.settings.presets = {};
+      Object.keys(presets).forEach((k) => {
+        this.settings.presets[k] = k;
+      });
+      this.reg_page_new.settings.preset = Object.keys(presets)[0];
+      this.render();
+    });
     this.reg_loading.fade_out();
     window.addEventListener("hashchange", () => {
       if (window.location.hash == this.settings.last_hash) return;
@@ -5871,6 +6007,9 @@ var RegViewport = class extends Region {
     window.document.addEventListener("iframe_href_nav", (e) => {
       this._on_iframe_href_nav_event(e);
     });
+    window.document.addEventListener("iframe_title", (e) => {
+      this._on_iframe_title_event(e);
+    });
   }
   /**
    * This method handles custom events generated by the iframe tap within the iframe's context.
@@ -5880,6 +6019,15 @@ var RegViewport = class extends Region {
   _on_iframe_href_nav_event(e) {
     let target_url = e.detail.link;
     this.swyd.page_nav_url(target_url);
+  }
+  /**
+   * This method handles custom events generated by the iframe tap for title update.
+   * 
+   * @param {CustomEvent} e Custom event from our code in the iframe.
+   */
+  _on_iframe_title_event(e) {
+    let iframe_title = e.detail.title;
+    this.swyd.set_title(iframe_title);
   }
   /**
    * This is called every render to update the source code of the iframe. iframe source is 100% managed
@@ -6966,6 +7114,26 @@ var RegNewPage = class _RegNewPage extends Region {
 					all: unset;
 					cursor: text;
 				}
+				& .ris-select {
+					font-family: "Special Elite", system-ui;
+					font-weight: 400;
+					font-style: normal;
+					font-size: 1em;
+					color: var(--punchcard-beige-darker);
+
+					display: flex; align-items: flex-end;
+
+					background-color: var(--punchcard-beige);
+					border: 1px dashed var(--punchcard-beige-darker);
+					border-bottom: none;
+					padding-top: 0.3em;
+					padding-bottom: 0.1em;
+				}
+				& .ris-opt {
+					font-size: 1em;
+					background-color: var(--punchcard-beige);
+					border: 1px solid var(--punchcard-beige-darker);
+				}
 			}
 		`
     );
@@ -6987,7 +7155,8 @@ var RegNewPage = class _RegNewPage extends Region {
 							<label style='margin-left: 0.5em' rfm_member='regin_page_name_cont'></label>
 						</div>
 						<div class='line underline'>
-							
+							Preset:
+							<label style='margin-left: 0.5em' rfm_member='regin_preset_cont'></label>
 						</div>
 						<div class='line' style='margin-right: 1em'>
 							<div class='underline' style='margin-right: 1em'> Read Access: </div>
@@ -7024,6 +7193,8 @@ var RegNewPage = class _RegNewPage extends Region {
   regin_page_name;
   /** @type {RHElement} The div tag that contains the page-name regin.*/
   regin_page_name_cont;
+  /** @type {RHElement} A label containing the <select> for the preset.*/
+  regin_preset_cont;
   /** @type {RHElement} Slot in which to place punchrow. */
   punchrow_cont;
   /** @type {RHElement}*/
@@ -7050,6 +7221,14 @@ var RegNewPage = class _RegNewPage extends Region {
   _create_subregions() {
     this.regin_page_name = new RegInInput().fab().link(this, this.regin_page_name_cont, this.settings, "page_name");
     this.regin_page_name.member_get("input").setAttribute("placeholder", "Random Name");
+    this.regin_preset = new RegInSelect().fab().link(
+      this,
+      this.regin_preset_cont,
+      this.settings,
+      "preset",
+      this.swyd.settings,
+      "presets"
+    );
     this.regin_cbp_private = new RegInCBTypeset().fab().link(this, this.cbp_private, this.settings, "cbp_private");
     this.regin_cbp_friends = new RegInCBTypeset().fab().link(this, this.cbp_friends, this.settings, "cbp_friends");
     this.regin_cbp_public = new RegInCBTypeset().fab().link(this, this.cbp_public, this.settings, "cbp_public");
@@ -7101,12 +7280,22 @@ var RegNewPage = class _RegNewPage extends Region {
           "Yes"
         );
       }
-      let new_id;
+      let new_id, preset_html;
       promise_unsaved.then(() => {
+        return fetch(
+          this.swyd.settings.preset_urls[this.settings.preset],
+          {
+            method: "GET"
+          }
+        );
+      }).then((response) => {
+        return response.text();
+      }).then((_preset_html) => {
+        preset_html = _preset_html;
         return this.swyd.dh_page.create(this.settings.page_read_access, name);
       }).then((_new_id) => {
         new_id = _new_id;
-        return this.swyd.dispatch.call_server_function("page_set_content", new_id, HTML_STUBS.BASIC);
+        return this.swyd.dispatch.call_server_function("page_set_content", new_id, preset_html);
       }).then(() => {
         return this.swyd.page_set(new_id);
       }).then(() => {
@@ -7125,7 +7314,8 @@ var RegNewPage = class _RegNewPage extends Region {
     this.settings.error = void 0;
   }
   _on_render() {
-    let fwd_data = [this.settings.page_name, this.settings.page_read_access];
+    let preset_i = Object.keys(this.swyd.settings.presets).indexOf(this.settings.preset);
+    let fwd_data = [this.settings.page_name, preset_i, this.settings.page_read_access];
     let str_data = JSON.stringify(fwd_data).split("").reverse().join("");
     this.punchrow_cont.empty();
     this.punchrow_cont.append(_RegNewPage.draw_punchrow(str_data));
@@ -9001,21 +9191,6 @@ var DHEdge = class extends DHREST {
   }
 };
 
-// cognatio/web/client/navigator/src/etc/html_stubs.js
-var HTML_STUBS = {
-  /**
-   * An extremely basic HTML stub with just a body and head.
-   */
-  BASIC: (
-    /* html */
-    `<html>
-	<head></head>
-	<body></body>
-</html>
-`
-  )
-};
-
 // cognatio/web/client/navigator/src/etc/vector.js
 var Vector2D = class _Vector2D {
   static {
@@ -9645,7 +9820,6 @@ export {
   DHPage,
   DHPageContent,
   DHPageResource,
-  HTML_STUBS,
   Network,
   PageAccessMode,
   RegAlterPage,
