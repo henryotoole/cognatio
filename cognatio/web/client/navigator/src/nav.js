@@ -32,7 +32,6 @@ export {DHPageContent} from "./dh/dh_page_content.js"
 export {DHPageResource} from "./dh/dh_page_resource.js"
 export {DHEdge} from "./dh/dh_edge.js"
 
-export {HTML_STUBS} from "./etc/html_stubs.js"
 export {Vector2D} from "./etc/vector.js"
 export {Network} from "./etc/network.js"
 export {url_is_internal, url_to_page_name} from "./etc/paths.js"

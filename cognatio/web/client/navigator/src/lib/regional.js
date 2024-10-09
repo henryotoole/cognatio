@@ -3674,6 +3674,112 @@ var RegInTextArea = class _RegInTextArea extends RegIn {
   }
 };
 
+// src/regional/regions/reg_in_select.js
+var RegInSelect = class extends RegIn {
+  static {
+    __name(this, "RegInSelect");
+  }
+  fab_get() {
+    let html = (
+      /* html */
+      `
+			<select rfm_member="select" class="ris-select"></select>
+		`
+    );
+    return new Fabricator(html);
+  }
+  /** @type {RHElement} The <select> element */
+  select;
+  /**
+   * @param {Object} options Key/val pairs where keys are `<option> values` and vals are `<option> names`.
+   * 						   This argument is optional, and can be omitted if the select is linked by reference
+   * 						   to a list with link_options().
+   */
+  constructor(options) {
+    super();
+    this._value_update_handlers = [];
+    this._default_options = options || {};
+    this._opts_ref = void 0;
+    this._opts_key = void 0;
+  }
+  /**
+   * Perform linking operations for this region:
+   * + Link this region to its super-region and vice versa
+   * + Link this region to the specific element in webpage DOM that it represents.
+   * + Link this region to the switchyard and datahandlers and setup certain events.
+   * + Assign a unique in-memory ID for this region and set the reg_el's ID to the same.
+   * + Fabrication links (if fab() was called earlier), including links to this.$element and linking $elements
+   *   to the reg_el.
+   * 
+   * The additional final two parameters allow this input region to store its value by reference in a location
+   * of the implementor's choosing. This will most commonly be `superregion.settings` and `some_settings_key`.
+   * It could also, for example, refer to the Switchyard settings or some Component's settings. It could
+   * even be tied directly to data in a Datahandler!
+   * 
+   * @param {Region} reg_super The super (or parent) region that this region will be a subregion of.
+   * @param {HTMLElement} reg_el The main element for this region, which this region will be bound to.
+   * @param {Object} value_ref Reference to object in which region input value is stored. See above.
+   * @param {String} value_key The key in `value_ref` at which value is stored: `value_ref[value_key] = value`
+   * @param {Object} opts_ref OPTIONAL: Reference to object in which region option dict is stored.
+   * @param {String} opts_key OPTIONAL: The key in `opts_ref` at which option dict is stored: `opts_ref[opts_key] = opts`
+   * 
+   * @returns {this} itself for function call chaining
+   */
+  link(reg_super, reg_el, value_ref, value_key, opts_ref, opts_key) {
+    super.link(reg_super, reg_el, value_ref, value_key);
+    this._opts_ref = opts_ref;
+    this._opts_key = opts_key;
+    return this;
+  }
+  /**
+   * This is called after linking is complete. It is used here to bind events.
+   */
+  _on_link_post() {
+    this.select.addEventListener("change", () => {
+      this._view_alters_value(this.select.value);
+    });
+    this.render_checksum_add_tracked("regin_opt_ref", () => {
+      if (this._opts_ref == void 0) return 0;
+      return this._opts_ref[this._opts_key];
+    });
+  }
+  _on_settings_refresh() {
+    this.settings.value = void 0;
+    if (this._opts_ref != void 0) {
+      this.settings.options = this._opts_ref[this._opts_key];
+    } else {
+      this.settings.options = this._default_options;
+    }
+  }
+  /**
+   * Completely redraw this region and all active subregions. Overridden here to selectively pull from
+   * super-region settings value if it has changed from last time we pulled it.
+   */
+  render(force) {
+    if (this._opts_ref != void 0) {
+      this.settings.options = this._opts_ref[this._opts_key];
+    }
+    super.render(force);
+  }
+  _on_render() {
+    super._on_render();
+    this.select.empty();
+    let options = this.settings.options != void 0 ? this.settings.options : {};
+    Object.entries(options).forEach(([k, v]) => {
+      let opt = RHElement.wrap(document.createElement("option"));
+      opt.setAttribute("value", k);
+      opt.textContent = v;
+      opt.classList.add("ris-opt");
+      this.select.append(opt);
+    });
+    if (this.settings.value != "" && !options.hasOwnProperty(this.settings.value)) {
+      let k = Object.keys(options), v = k.length > 0 ? k[0] : "";
+      this._view_alters_value(v);
+    }
+    this.select.value = this.settings.value;
+  }
+};
+
 // src/regional/lib/dispatch.js
 var DispatchClientJS = class {
   static {
@@ -4395,6 +4501,7 @@ export {
   RegIn,
   RegInCheckbox,
   RegInInput,
+  RegInSelect,
   RegInTextArea,
   RegOneChoice,
   RegTwoChoice,

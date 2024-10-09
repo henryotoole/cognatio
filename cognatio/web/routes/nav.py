@@ -29,6 +29,12 @@ def nav_base_redirect():
 	"""
 	return redirect(f"/page/{GATEWAY_NAME}.html")
 
+@current_app.route("/favicon.ico")
+def nav_favicon_redirect():
+	"""This catches base url queries and shunts them towards the 'gateway' page.
+	"""
+	return redirect(f"/s/nav/assets/icons/cognatio64.png")
+
 @current_app.route(f"/page/{GATEWAY_NAME}.html")
 def nav_gateway():
 	"""This is a special override that will serve the gateway manually and ensure that a gateway exists, if
@@ -148,7 +154,6 @@ def dev_page(path):
 	return send_from_directory(env.fpath_pages, path), 200
 
 @dispatch_callable_function(dispatcher)
-#@login_required
 def page_set_content(page_id: int, new_content: str):
 	"""Set the content of a new page by ID. This method requires write access to the page instance in
 	question on behalf of the logged-in user making this request. As permissions currently stand, only
@@ -170,3 +175,28 @@ def page_set_content(page_id: int, new_content: str):
 	page.set_page_content(new_content)
 	# Udpate edges originating in this page and page mass.
 	scan_update_page(page.id)
+
+@dispatch_callable_function(dispatcher)
+def page_get_presets():
+	"""Get a list of available preset URLs (relative to root). This scans the preset directory, which is
+	essentially hard-coded within the body of this function. It's a sort of magic directory, I suppose.
+
+	It also includes the 'stubs' folder, in the regular static directory.
+
+	Returns:
+		dict: Of names to relative URL's
+	"""
+	out = {}
+	fpath_stubs = os.path.join(env.fpath_static, 'html', 'stubs')
+	for fname in os.listdir(fpath_stubs):
+		if '.html' in fname:
+			out[fname.split('.')[0]] = os.path.join("/s", "html", "stubs", fname)
+
+	fpath_preset_dir = os.path.join(env.fpath_static_local, 'presets')
+
+	if os.path.exists(fpath_preset_dir):
+		for fname in os.listdir(fpath_preset_dir):
+			if '.html' in fname:
+				out[fname.split('.')[0]] = os.path.join("/sl", "presets", fname)
+
+	return out

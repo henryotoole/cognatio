@@ -153,6 +153,10 @@ class RegSWNav extends RegionSwitchyard
 		page_loading: undefined,
 		/** @description The hash that was last used to set a page */
 		last_hash: undefined,
+		/** @description The presets that are available when creating a new page. keys to names. */
+		presets: {},
+		/** @description The presets that are available when creating a new page. keys to rel url's. */
+		preset_urls: {},
 	}
 
 	/** @type {RHElement} */
@@ -379,6 +383,28 @@ class RegSWNav extends RegionSwitchyard
 	}
 
 	/**
+	 * Use logic to determine what the overall title of this page should be. This is intended to be edge-triggered
+	 * whenever a new page loads into the viewport. It's really not the best code and **definitely** needs to be
+	 * refactored if setting title ever becomes more complex.
+	 * 
+	 * @param {String} iframe_title The iframe title, or undefined / "" if it doesn't have one.
+	 */
+	set_title(sub_title)
+	{
+		let title = "Cognatio"
+		if(sub_title != undefined && sub_title.length != 0)
+		{
+			title = sub_title
+		}
+		else if(this.settings.page_id != undefined && this.dh_page.comp_get(this.settings.page_id) != undefined)
+		{
+			title = this.dh_page.comp_get(this.settings.page_id).name
+		}
+
+		document.title = title
+	}
+
+	/**
 	 * Set the current logged-in user_id for this browser session. Sets in settings and edge triggers dh updates.
 	 * 
 	 * @param {Number} user_id The user ID or undefined if not logged in.
@@ -512,6 +538,16 @@ class RegSWNav extends RegionSwitchyard
 	{
 		// Kick off the initial page load.
 		this.page_set(this.settings.page_id)
+
+		// Kick another lazy-load event for the available presets.
+		this.dispatch.call_server_function("page_get_presets").then((presets)=>
+		{
+			this.settings.preset_urls = presets
+			this.settings.presets = {}
+			Object.keys(presets).forEach((k)=>{this.settings.presets[k] = k})
+			this.reg_page_new.settings.preset = Object.keys(presets)[0]
+			this.render() // This will re-render the page creation.
+		})
 
 		this.reg_loading.fade_out()
 

@@ -9,6 +9,7 @@
  * One and only one instance of the tap will exist in the iframe at any given time. Right now, the tap provides
  * the following functionality:
  * 1. Communication hook that overrides link-click behavior and forwards those clicks to the nav.
+ * 2. Send a message containing the title (or an empty string if there is not one) on page load.
  */
 class IframeTap
 {
@@ -16,6 +17,7 @@ class IframeTap
 	{
 		this.setup_dom_change_listener()
 		this.setup_override_all_links()
+		this.notify_title()
 	}
 	
 	/**
@@ -86,6 +88,20 @@ class IframeTap
 			// Note: this will probably trigger a security error if a cross-origin page is loaded.
 			window.parent.document.dispatchEvent(event)
 		})
+	}
+
+	/**
+	 * Send a message upwards with the title of this document.
+	 */
+	notify_title()
+	{
+		let event = new CustomEvent('iframe_title', {
+			detail: {
+				'title': document.title
+			}
+		})
+		// Note: this will probably trigger a security error if a cross-origin page is loaded.
+		window.parent.document.dispatchEvent(event)
 	}
 }
 

@@ -3,8 +3,8 @@
  * @author Josh Reed
  */
 
-import {Region, Fabricator, RHElement, RegInInput, RegInCheckbox, ErrorREST} from "../lib/regional.js"
-import {RegSWNav, HTML_STUBS, PageAccessMode, RegInCBTypeset} from "../nav.js"
+import {Region, Fabricator, RHElement, RegInInput, RegInCheckbox, RegInSelect, ErrorREST} from "../lib/regional.js"
+import {RegSWNav, PageAccessMode, RegInCBTypeset} from "../nav.js"
 
 class RegNewPage extends Region
 {
@@ -35,6 +35,26 @@ class RegNewPage extends Region
 					all: unset;
 					cursor: text;
 				}
+				& .ris-select {
+					font-family: "Special Elite", system-ui;
+					font-weight: 400;
+					font-style: normal;
+					font-size: 1em;
+					color: var(--punchcard-beige-darker);
+
+					display: flex; align-items: flex-end;
+
+					background-color: var(--punchcard-beige);
+					border: 1px dashed var(--punchcard-beige-darker);
+					border-bottom: none;
+					padding-top: 0.3em;
+					padding-bottom: 0.1em;
+				}
+				& .ris-opt {
+					font-size: 1em;
+					background-color: var(--punchcard-beige);
+					border: 1px solid var(--punchcard-beige-darker);
+				}
 			}
 		`
 		
@@ -54,7 +74,8 @@ class RegNewPage extends Region
 							<label style='margin-left: 0.5em' rfm_member='regin_page_name_cont'></label>
 						</div>
 						<div class='line underline'>
-							
+							Preset:
+							<label style='margin-left: 0.5em' rfm_member='regin_preset_cont'></label>
 						</div>
 						<div class='line' style='margin-right: 1em'>
 							<div class='underline' style='margin-right: 1em'> Read Access: </div>
@@ -91,6 +112,8 @@ class RegNewPage extends Region
 	regin_page_name
 	/** @type {RHElement} The div tag that contains the page-name regin.*/
 	regin_page_name_cont
+	/** @type {RHElement} A label containing the <select> for the preset.*/
+	regin_preset_cont
 	/** @type {RHElement} Slot in which to place punchrow. */
 	punchrow_cont
 	/** @type {RHElement}*/
@@ -121,6 +144,11 @@ class RegNewPage extends Region
 		// Create regin for text input
 		this.regin_page_name = new RegInInput().fab().link(this, this.regin_page_name_cont, this.settings, "page_name")
 		this.regin_page_name.member_get("input").setAttribute("placeholder", "Random Name")
+
+		// Create regin for preset
+		this.regin_preset = new RegInSelect().fab().link(
+			this, this.regin_preset_cont, this.settings, "preset", this.swyd.settings, "presets"
+		)
 
 		// Create regins for permission options
 		this.regin_cbp_private = new RegInCBTypeset().fab().link(this, this.cbp_private, this.settings, "cbp_private")
@@ -188,14 +216,26 @@ class RegNewPage extends Region
 					"Yes"
 				)
 			}
-			let new_id
+			let new_id, preset_html
 			promise_unsaved.then(()=>
 			{
+				return fetch(
+					this.swyd.settings.preset_urls[this.settings.preset],
+					{
+						method: "GET"
+					}
+				)
+			}).then((response)=>
+			{
+				return response.text()
+			}).then((_preset_html)=>
+			{
+				preset_html = _preset_html
 				return this.swyd.dh_page.create(this.settings.page_read_access, name)
 			}).then((_new_id)=>
 			{
 				new_id = _new_id
-				return this.swyd.dispatch.call_server_function('page_set_content', new_id, HTML_STUBS.BASIC)
+				return this.swyd.dispatch.call_server_function('page_set_content', new_id, preset_html)
 			}).then(()=>
 			{
 				return this.swyd.page_set(new_id)
@@ -223,7 +263,8 @@ class RegNewPage extends Region
 	_on_render()
 	{
 		// Punchrow
-		let fwd_data = [this.settings.page_name, this.settings.page_read_access]
+		let preset_i = Object.keys(this.swyd.settings.presets).indexOf(this.settings.preset)
+		let fwd_data = [this.settings.page_name, preset_i, this.settings.page_read_access]
 		let str_data = JSON.stringify(fwd_data).split("").reverse().join("")
 		this.punchrow_cont.empty()
 		this.punchrow_cont.append(RegNewPage.draw_punchrow(str_data))
