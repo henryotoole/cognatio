@@ -8,7 +8,6 @@ from cognatio.core.models import Page, User
 from cognatio.core.enums import PageAccessMode
 from cognatio.core.graph import scan_update_page
 from cognatio.web.flask import dispatcher, RPCErrorCodes, render_template
-from cognatio.web.schemas import api_route
 from cognatio.web.routes.misc import _page_auth
 from cognatio.util.paths import get_page_name_from_url
 
@@ -173,7 +172,7 @@ def page_set_content(page_id: int, new_content: str):
 		return DispatchResponseError(g.__dispatch__session_id, RPCErrorCodes.NO_ACCESS, "User has not write access.")
 
 	page.set_page_content(new_content)
-	# Udpate edges originating in this page and page mass.
+	# Update edges originating in this page and page mass.
 	scan_update_page(page.id)
 
 @dispatch_callable_function(dispatcher)
@@ -200,3 +199,13 @@ def page_get_presets():
 				out[fname.split('.')[0]] = os.path.join("/sl", "presets", fname)
 
 	return out
+
+@dispatch_callable_function(dispatcher)
+def update_scan_for_page(page_id: int):
+	"""Manually call the scan update function for a page.
+
+	Args:
+		page_id (int): The ID of the page to update scan for
+	"""
+	# Update edges originating in this page and page mass.
+	scan_update_page(page_id)

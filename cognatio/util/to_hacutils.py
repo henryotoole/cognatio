@@ -22,6 +22,7 @@ def is_valid_url(url) -> bool:
 	Returns:
 		bool: True if valid, False if not.
 	"""
+	if len(url) == 0: return False
 	has_illegal = re.search('[^]A-Za-z0-9_.~!*''();:@&=+$,/?#[%-]+', url) is not None
 	if has_illegal: return False
 	try:

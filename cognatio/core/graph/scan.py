@@ -59,7 +59,7 @@ class PageScanner:
 			page.mass_cached = self._mass_calc(parser.orig_html)
 			mass_total += page.mass_cached
 
-		# Check for stale edges for this page AFTER caching parsers but before adding new eges
+		# Check for stale edges for this page AFTER caching parsers but before adding new edges
 		for page in pages:
 			# Get all edges that originate from, or terminate on, this page.
 			edges = Edge.get_edges_originating_from_page(page.id) + Edge.get_edges_terminating_on_page(page.id)

@@ -66,7 +66,22 @@ class RegViewport extends Region
 	_on_iframe_href_nav_event(e)
 	{
 		let target_url = e.detail.link
-		this.swyd.page_nav_url(target_url)
+		this.swyd.page_nav_url(target_url).catch((e)=>
+		{
+			if(e._nonexist)
+			{
+				this.swyd.reg_two_choice.present_choice(
+					"Create New Page?",
+					`The page '${e._page_name}' does not yet exist. Would you like to create it?`,
+					"No", "Yes"
+				).then(()=>
+				{
+					this.swyd.reg_page_new.activate()
+					this.swyd.reg_page_new.settings.page_name = e._page_name
+					this.swyd.render()
+				})
+			}
+		})
 	}
 
 	/**

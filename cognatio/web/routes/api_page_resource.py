@@ -7,7 +7,7 @@ __author__ = "Josh Reed"
 # Our code
 from cognatio import env
 from cognatio.core.models import Page, User
-from cognatio.web.schemas import api_route
+from cognatio.web.schemas import api
 
 # Other libs
 from flask import current_app, request, jsonify
@@ -22,7 +22,7 @@ import sys
 class CreateException(ValueError):
 	pass
 
-url_rule = os.path.join(api_route + "/page/<int:page_id>/resource/<string:fname>")
+url_rule = os.path.join(api.path_root_get() + "/page/<int:page_id>/resource/<string:fname>")
 @current_app.route(url_rule, methods=["GET", "POST", "DELETE"])
 def rest_api_page_resource_specific(page_id: int, fname: str):
 	"""Implementation for the 'page resource' REST API. This API enables access to the 'page resource', a per-
@@ -85,7 +85,7 @@ def rest_api_page_resource_specific(page_id: int, fname: str):
 		_delete(page, fname)
 		return jsonify({})
 
-url_rule = os.path.join(api_route + "/page/<int:page_id>/resource")
+url_rule = os.path.join(api.path_root_get() + "/page/<int:page_id>/resource")
 @current_app.route(url_rule, methods=["GET"])
 def rest_api_page_resource_general(page_id: int):
 	"""The 'general' route for the page resource api. See rest_api_page_resource_specific() docstring.

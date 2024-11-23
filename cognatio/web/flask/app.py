@@ -8,17 +8,21 @@ from cognatio import cognatio_config, env
 # Other libs
 from flask import Flask, has_app_context
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager
+from flask_login import LoginManager, current_user
 from dispatch_flask import DispatcherFlask
+from restlink import ExposerFlask
 
 # Base python
 
 
 # Instantiate the plugins that need to be importable from elsewhere.
 db_flask = SQLAlchemy()
-from cognatio.web.schemas import frsa_spur
+rest_exposer = ExposerFlask()
 login_manager = LoginManager()
 dispatcher = DispatcherFlask(redis_instance=env.redis)
+
+# Any imports that rely on the above singletons
+import cognatio.web.flask.rest
 
 def init_app():
 	"""This method is a factory that produces the Flask application object. This will:
@@ -41,7 +45,7 @@ def init_app():
 
 	# 3. Initialize plugins
 	db_flask.init_app(app)
-	frsa_spur.init_app(app)
+	rest_exposer.init_app(app)
 	login_manager.init_app(app)
 	dispatcher.init_app(app)
 	import cognatio.web.flask.login
@@ -50,7 +54,6 @@ def init_app():
 	with app.app_context():
 		# 4.1 Routes
 		import cognatio.web.routes
-		frsa_spur.register_routes()
 
 		# 4.2 Blueprints
 

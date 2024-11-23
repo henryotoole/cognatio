@@ -224,7 +224,10 @@ class RegSWNav extends RegionSwitchyard
 		{
 			if(ids.length == 0)
 			{
-				throw new Error(`Page '${page_name}' does not exist.`)
+				let e = new Error(`Page '${page_name}' does not exist.`)
+				e._nonexist = true
+				e._page_name = page_name
+				throw e
 			}
 			return this.swyd.page_nav(ids[0])
 		})

@@ -23,6 +23,7 @@ class RegLogin extends Region
 					
 					opacity: 100%;
 					background-color: var(--white-off);
+					overflow: hidden;
 				}
 				& .constellation {
 					top: 0; left: 0;
@@ -224,14 +225,17 @@ class RegLogin extends Region
 							<div class='cont-interface'>
 								<machine class='interface'>
 									<div class='title'> Navigator Login </div>
-									<div class='interface-rec'>
-										<div class='terminal input-line'>
-											<div rfm_member='login_email' name='email' autocomplete='email'></div>
+									<!--Form is required for autofill to work.-->
+									<form style='width: 100%'>
+										<div class='interface-rec'>
+											<div class='terminal input-line'>
+												<div rfm_member='login_email' name='email'></div>
+											</div>
+											<div class='terminal input-line'>
+												<div rfm_member='login_password' name='password'></div>
+											</div>
 										</div>
-										<div class='terminal input-line'>
-											<div rfm_member='login_password' name='password' autocomplete='password'></div>
-										</div>
-									</div>
+									</form>
 									<div class='row'>
 										<button rfm_member='btn_login' class='button'>Login</button>
 										<button rfm_member='btn_to_signup' class='button'>New</button>
@@ -291,10 +295,13 @@ class RegLogin extends Region
 
 		// Login section
 		this.regin_login_email = new RegInInput().fab().link(this, this.login_email, this.settings, "login_email")
+		this.regin_login_email.member_get("input").setAttribute("type", "email")
 		this.regin_login_email.member_get("input").setAttribute("placeholder", "Email")
+		this.regin_login_email.member_get("input").setAttribute("autocomplete", "email")
 		this.regin_login_password = new RegInInput().fab().link(this, this.login_password, this.settings, "login_password")
 		this.regin_login_password.member_get("input").setAttribute("placeholder", "Password")
 		this.regin_login_password.member_get("input").setAttribute("type", "password")
+		this.regin_login_password.member_get("input").setAttribute("autocomplete", "password")
 
 		// New account
 		this.regin_new_email = new RegInInput().fab().link(this, this.new_email, this.settings, "new_email")
@@ -303,7 +310,7 @@ class RegLogin extends Region
 		this.regin_new_password.member_get("input").setAttribute("placeholder", "Password")
 		this.regin_new_password.member_get("input").setAttribute("type", "password")
 		this.regin_new_password2 = new RegInInput().fab().link(this, this.new_password2, this.settings, "new_password2")
-		this.regin_new_password2.member_get("input").setAttribute("placeholder", "Password")
+		this.regin_new_password2.member_get("input").setAttribute("placeholder", "Confirm Password")
 		this.regin_new_password2.member_get("input").setAttribute("type", "password")
 	}
 

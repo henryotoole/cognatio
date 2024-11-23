@@ -25,22 +25,20 @@ __author__ = "Josh Reed"
 from cognatio.web.schemas.page import PageSchema
 from cognatio.web.schemas.user import UserSchema
 from cognatio.web.schemas.edge import EdgeSchema
-from cognatio.util.dr_hitch.frsa_spur import FRSASpur
+from cognatio.web.flask.app import rest_exposer
 
 # Other libs
+from restlink import API
 
 # Base python
-
-# Current api version and route
-api_route = "/api/v1"
 
 # Schema instances
 schema_page = PageSchema()
 schema_user = UserSchema(exclude=['passhash'])
 schema_edge = EdgeSchema()
 
-# Bind all into the FRSASpur instance
-frsa_spur = FRSASpur("Cognatio", "0.1.0", api_route)
-frsa_spur.register_schema(schema_page)
-frsa_spur.register_schema(schema_user)
-frsa_spur.register_schema(schema_edge)
+# Register schema's with restlink under one single api.
+api = API("api", "v1", "Cognatio")
+rest_exposer.register_schema(api, schema_page)
+rest_exposer.register_schema(api, schema_user)
+rest_exposer.register_schema(api, schema_edge)

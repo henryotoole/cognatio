@@ -114,16 +114,25 @@ class RegMap extends Region
 	}
 
 	/**
-	 * Bind the event handlers that allow a 'pan' operation to occur via click-and-drag. This is not a drag
-	 * event.
+	 * Bind handlers that allow pan and zoom in the map for both click and touch events.
 	 */
 	_setup_pan_and_zoom_handlers()
+	{
+		this._setup_pan_and_zoom_handlers_click()
+		this._setup_pan_and_zoom_handlers_touch()
+	}
+
+	/**
+	 * Bind the event handlers that allow a 'pan' operation to occur via click-and-drag.
+	 */
+	_setup_pan_and_zoom_handlers_click()
 	{
 		this._clickdrag = {
 			lmb_held: false,
 			rmb_held: false,
 			lmb_last: {x: 0, y: 0}
 		}
+
 		this.reg.addEventListener('mousedown', (e)=>
 		{
 			if(e.button == 0)
@@ -171,6 +180,118 @@ class RegMap extends Region
 			)
 			this._zoom_at(this._wheel.accrued_delta, p_vp_cursor)
 			this._wheel.accrued_delta = 0
+		}))
+	}
+
+	/**
+	 * Bind the event handlers that allow a 'pan' operation to occur via touch-and-drag.
+	 */
+	_setup_pan_and_zoom_handlers_touch()
+	{
+		this._touchdrag = {
+			A: {x: 0, y: 0},
+			B: {x: 0, y: 0},
+			center_last: {x: 0, y: 0},
+			n: 0,
+			dist_last: 0
+		}
+		// Doctrine here is to distinguish between one- and two-touch events. One-touch is a pan operation
+		// and two-touch is a zoom.
+
+		/**
+		 * Helper function to update touchdrag points from event. Will correctly store one or two touch data.
+		 */
+		let touch_update = (e)=>
+		{
+			if(e.touches.length > 1)
+			{
+				this._touchdrag.B.x = e.touches[1].clientX
+				this._touchdrag.B.y = e.touches[1].clientY
+			}
+			if(e.touches.length > 0)
+			{
+				this._touchdrag.A.x = e.touches[0].clientX
+				this._touchdrag.A.y = e.touches[0].clientY
+			}
+			this._touchdrag.n = e.touches.length
+			this._touchdrag.center_last = get_touch_center(e)
+			this._touchdrag.dist_last = get_touch_dist(e)
+		}
+		/**
+		 * @returns Correct 'center' of the touch event, just the touch or average of two if two-touch.
+		 */
+		let get_touch_center = (e)=>
+		{
+			if(this._touchdrag.n == 1)
+			{
+				return {x: e.touches[0].clientX, y: e.touches[0].clientY}
+			}
+			if(this._touchdrag.n == 2)
+			{
+				return {
+					x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+					y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+				}
+			}
+		}
+		/**
+		 * @returns Distance between touches for n=2 touch.
+		 */
+		let get_touch_dist = (e)=>
+		{
+			if(e.touches.length != 2) return 0
+
+			return new Vector2D(
+				e.touches[0].clientX - e.touches[1].clientX,
+				e.touches[0].clientY - e.touches[1].clientY
+			).magnitude
+		}
+
+		this.reg.addEventListener('touchstart', (e)=>
+		{
+			e.preventDefault()
+			e.stopPropagation()
+			if(e.touches.length > 2) return
+			touch_update(e)
+		})
+		this.reg.addEventListener('touchend', (e)=>
+		{
+			e.preventDefault()
+			e.stopPropagation()
+			this._touchdrag.n = 0
+		})
+		this.reg.addEventListener('touchmove', throttle_leading(1000/120, (e)=>
+		{
+			e.preventDefault()
+			e.stopPropagation()
+			if(this._touchdrag.n == 0 || this._touchdrag.n > 2) return
+
+			let center = get_touch_center(e)
+
+			// One finger is enough for a pan operation.
+			if(this._touchdrag.n > 0)
+			{
+				this._pan_by(
+					new Vector2D(
+						center.x - this._touchdrag.center_last.x,
+						center.y - this._touchdrag.center_last.y,
+					)
+				)
+			}
+			// But if there are two fingers, we should zoom too.
+			if(this._touchdrag.n > 1)
+			{
+				// Compute mouse position in viewport coords.
+				let bb = this.reg.getBoundingClientRect()
+				let p_vp_cursor = new Vector2D(
+					(center.x - bb.x) - (bb.width / 2),
+					(center.y - bb.y) - (bb.height / 2),
+				)
+				this._zoom_at(3*(get_touch_dist(e) - this._touchdrag.dist_last), p_vp_cursor)
+			}
+
+			// Update after all can use relative positioning.
+			touch_update(e)
 		}))
 	}
 
