@@ -3,21 +3,21 @@
 __author__ = "Josh Reed"
 
 # Our code
-from cognatio.util.dr_hitch.schema_rsa import SchemaRSA
 from cognatio import env
 from cognatio.core.models import User
 
 # Other libs
 from marshmallow import fields, post_load
 from flask import abort
+from restlink import SchemaDB
 
 # Base python
 
-class UserSchema(SchemaRSA):
+class UserSchema(SchemaDB):
 
-	__db_model__ = User
-	__rest_path__ = "/user"
-	__allowed_methods__ = ["GET"]
+	_db_model_ = User
+	_rest_path_ = "/user"
+	_allowed_methods_ = ["GET"]
 
 	id = fields.Int(strict=True, dump_only=True)
 	email = fields.Email()

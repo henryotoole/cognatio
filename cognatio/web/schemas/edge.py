@@ -3,19 +3,19 @@
 __author__ = "Josh Reed"
 
 # Our code
-from cognatio.util.dr_hitch.schema_rsa import SchemaRSA
 from cognatio.core.models import Edge
 
 # Other libs
 from marshmallow import fields
+from restlink import SchemaDB
 
 # Base python
 
-class EdgeSchema(SchemaRSA):
+class EdgeSchema(SchemaDB):
 
-	__db_model__ = Edge
-	__rest_path__ = "/edge"
-	__allowed_methods__ = ["GET"]
+	_db_model_ = Edge
+	_rest_path_ = "/edge"
+	_allowed_methods_ = ["GET"]
 
 	# Everything is read only
 	id = fields.Int(strict=True, dump_only=True)

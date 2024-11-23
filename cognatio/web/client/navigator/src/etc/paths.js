@@ -22,7 +22,6 @@ const url_is_internal = (url_string)=>
 	{
 		return true
 	}
-	
 	return url.origin === window.origin
 }
 

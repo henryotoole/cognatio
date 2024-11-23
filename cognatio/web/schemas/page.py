@@ -6,21 +6,22 @@ __author__ = "Josh Reed"
 from cognatio import env, cognatio_config
 from cognatio.core.models import Page
 from cognatio.core.enums import PageAccessMode
-from cognatio.util.dr_hitch.schema_rsa import SchemaRSA
+from cognatio.web.flask.app import rest_exposer
 
 # Other libs
 from marshmallow import fields, post_load, validate
 from flask import abort
 from sqlalchemy import select
+from restlink import SchemaDB
 
 # Base python
 
-class PageSchema(SchemaRSA):
+class PageSchema(SchemaDB):
 
-	__db_model__ = Page
-	__rest_path__ = "/page"
-	__allowed_methods__ = ["GET", "POST", "PUT"]
-	__field_db_remap__ = {"name": "name_rec"}
+	_db_model_ = Page
+	_rest_path_ = "/page"
+	_allowed_methods_ = ["GET", "POST", "PUT"]
+	_field_db_remap_ = {"name": "name_rec"}
 
 	id = fields.Int(strict=True, dump_only=True)
 	read_access_int = fields.Int(validate=validate.OneOf([e.value for e in PageAccessMode]))
@@ -91,46 +92,14 @@ class PageSchema(SchemaRSA):
 		"""
 		raise NotImplementedError("See comment block.")
 	
-	def validate_can_read(self, id, accessor_identity) -> bool:
-		"""This is a base method that should be implemented by a child Schema class. This validates an already-
-		authenticated credential for read access to this instance of the schema.
-
-		The `accessor_identity` is determined by whatever the FRSA Spur's `authenticate_creds()` method returns.
-		For example, it might be an instance of a User class as used by flask_login.
-
-		"Read access" refers to any operation that gets information about a resource. This would include the
-		classical get() method, as well as any get_by_filter() methods.
-
-		Args:
-			id (*): The ID of the schema instance to be read or None if a list is attempted.
-			accessor_identity (*): The identity of the API accessor. None if anonymous.
-
-		Returns:
-			bool: Whether or not the accessor has read access to instances of this schema
-		"""
+	def validate_can_read(self, id) -> bool:
 		# All read access to page **record** data is allowed. The same is true of edges, so in other words
 		# all access is allowed to the map of the network itself. Actual content for pages is handled thru
 		# a GET request against the file itself, and access will be blocked accordingly in that case.
 		return True
 	
-	def validate_can_write(self, id, accessor_identity) -> bool:
-		"""This is a base method that should be implemented by a child Schema class. This validates an already-
-		authenticated credential for write access to this instance of the schema.
-
-		The `accessor_identity` is determined by whatever the FRSA Spur's `authenticate_creds()` method returns.
-		For example, it might be an instance of a User class as used by flask_login.
-
-		"Write access" refers to any operation that modifies a resource. This would include the classical
-		create, update, and delete methods.
-
-		Args:
-			id (*): The ID of the schema instance to be written or None if a creation is attempted.
-			accessor_identity (*): The identity of the API accessor. None if anonymous.
-
-		Returns:
-			bool: Whether or not the accessor has write access to instances of this schema
-		"""
-		if accessor_identity is None: return False
-		if id is None: return accessor_identity.is_owner_user()
+	def validate_can_write(self, id) -> bool:
+		if rest_exposer.current_accessor is None: return False
+		if id is None: return rest_exposer.current_accessor.is_owner_user()
 		page: Page = self.record_get_from_db(id)
-		return page.get_user_write_access(accessor_identity.id)
+		return page.get_user_write_access(rest_exposer.current_accessor.id)

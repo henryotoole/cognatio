@@ -9,6 +9,8 @@ describe("ETC Paths utilities", function()
 {
 	it("can determine if a URL is same origin as window", function()
 	{
+
+		expect(url_is_internal("https://www.example.com/this/that")).toBe(false)
 		expect(url_is_internal("/this/that")).toBe(true)
 		expect(url_is_internal(window.origin + "/this/that")).toBe(true)
 		expect(url_is_internal("ooga" + window.origin + "/this/that")).toBe(false)

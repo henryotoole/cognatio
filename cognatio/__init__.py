@@ -13,10 +13,7 @@ import structlog
 import os
 import pathlib
 
-# 1.0.0 original release
-# 1.0.1 add dedicated login and static HTML for redirect.
-# 1.0.2 add title to tab, cognatio icon, and local static HTML template directory.
-version = "1.0.2"
+version = "1.0.3"
 
 project_path = pathlib.Path(__file__).parent.parent.resolve()
 """This is the root path to the project and/or git repository. It contains cognatio/core, tests, et. al. Unlike

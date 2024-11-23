@@ -235,6 +235,15 @@ class RegNewPage extends Region
 			}).then((_new_id)=>
 			{
 				new_id = _new_id
+				// This update is called to handle the pretty-common case where a link is typed out in the
+				// current page and then a new page is created with that same link. Refresh here ensures that
+				// the link is added to thew newly created page.
+				return this.swyd.dispatch.call_server_function('update_scan_for_page', this.swyd.settings.page_id)
+			}).then((_new_id)=>
+			{
+				return this.swyd.dh_page.network_update_for_page(this.swyd.dh_edge, this.swyd.settings.page_id)
+			}).then(()=>
+			{
 				return this.swyd.dispatch.call_server_function('page_set_content', new_id, preset_html)
 			}).then(()=>
 			{
