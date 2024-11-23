@@ -284,8 +284,8 @@ function generate_hash() {
 }
 __name(generate_hash, "generate_hash");
 __name2(generate_hash, "generate_hash");
-function checksum_json(data2) {
-  return b64_md5(JSON.stringify(data2));
+function checksum_json(data) {
+  return b64_md5(JSON.stringify(data));
 }
 __name(checksum_json, "checksum_json");
 __name2(checksum_json, "checksum_json");
@@ -1228,8 +1228,8 @@ var Component = class {
    * @param {*} id The unique ID by which we can reference the record in the datahandler
    * @param {DHTabular} dh The Tabular DataHandler that originated this component instance.
    */
-  constructor(id2, dh) {
-    this.id = id2;
+  constructor(id, dh) {
+    this.id = id;
     this.datahandler = dh;
   }
   /**
@@ -1247,11 +1247,11 @@ var Component = class {
    * @returns {Object} A reference to a unique memory space for this object where its data may be found.
    */
   get data() {
-    let data2 = this.datahandler.data_get_ref(this.id);
-    if (data2 == void 0) throw new Error(
+    let data = this.datahandler.data_get_ref(this.id);
+    if (data == void 0) throw new Error(
       `${this.constructor.name} is stale: record no longer exists in ${this.datahandler.constructor.name} for ID: '${this.id}'.`
     );
-    return data2;
+    return data;
   }
   /**
    * The settings reference is unique to this record ID, but shared across all record ID's.
@@ -1383,10 +1383,10 @@ var DHTabular = class extends DataHandler {
    * @param {*} id The ID of the record to delete.
    * @param {Object} data The data to set for this record.
    */
-  data_update_record(id2, data2) {
-    if (this._data[id2] == void 0) this._data[id2] = {};
-    if (this._settings[id2] == void 0) this._settings[id2] = {};
-    Object.assign(this._data[id2], data2);
+  data_update_record(id, data) {
+    if (this._data[id] == void 0) this._data[id] = {};
+    if (this._settings[id] == void 0) this._settings[id] = {};
+    Object.assign(this._data[id], data);
   }
   /**
    * Get information for a specific record. The returned object is a reference. Modifying it will modify
@@ -1396,17 +1396,17 @@ var DHTabular = class extends DataHandler {
    * 
    * @returns {Object} Data for this record or undefined if no such ID exists
    */
-  data_get_ref(id2) {
-    return this._data[id2];
+  data_get_ref(id) {
+    return this._data[id];
   }
   /**
    * Delete all data and settings for the provided record ID.
    * 
    * @param {*} id The ID of the record to delete
    */
-  data_delete_record(id2) {
-    delete this._data[id2];
-    delete this._settings[id2];
+  data_delete_record(id) {
+    delete this._data[id];
+    delete this._settings[id];
   }
   /**
    * @returns {Array} A list of currently known ID's.
@@ -1435,13 +1435,13 @@ var DHTabular = class extends DataHandler {
    */
   where(filter_data) {
     let out = {};
-    Object.entries(this._data).forEach(([id2, data2]) => {
+    Object.entries(this._data).forEach(([id, data]) => {
       let all_match = true;
       Object.entries(filter_data).forEach(([k, v]) => {
-        if (data2[k] != v) all_match = false;
+        if (data[k] != v) all_match = false;
       });
       if (all_match) {
-        out[id2] = data2;
+        out[id] = data;
       }
     });
     return out;
@@ -1453,8 +1453,8 @@ var DHTabular = class extends DataHandler {
    * 
    * @returns {Object} Settings for this record or undefined if no such ID exists
    */
-  settings_get_ref(id2) {
-    return this._settings[id2];
+  settings_get_ref(id) {
+    return this._settings[id];
   }
   /**
    * TODO Checksum Caching
@@ -1483,7 +1483,7 @@ var DHTabular = class extends DataHandler {
    * 
    * @returns {Component}
    */
-  comp_get(id2) {
+  comp_get(id) {
   }
 };
 var PUSH_CONFLICT_RESOLUTIONS = {
@@ -1537,10 +1537,6 @@ var DHREST = class extends DHTabular {
   _marked_ids;
   /** @type {Object} A mirror of _data that contains only data that originated from the server. No local changes. */
   _data_from_server;
-  /** @type {Boolean} Whether the bulk_get method is used to fetch multiple ID's */
-  _bulk_get_enabled;
-  /** @type {Boolean} Whether the bulk_update method is used to update multiple ID's */
-  _bulk_update_enabled;
   /** @type {Boolean} Whether cachebusting is enabled. If so, all fetch operations will cachebust. */
   _cache_bust_enabled;
   /** @type {string} The key of the ID for a record in server-returned data */
@@ -1553,11 +1549,9 @@ var DHREST = class extends DHTabular {
    * The api_url can be an absolute URL to another domain, or one relative to the current domain's root
    * 
    * @param {string} api_url The root path to the REST API routes, e.g. '/api/v2/noun'
-   * @param {Boolean} bulk_get Whether to get multiple at once with bulk fetching. Default true
-   * @param {Boolean} bulk_update Whether to update multiple at once with bulk update. Default true
    * @param {string} id_key What key in record data represents the ID. Defaults to "id"
    */
-  constructor(api_url, bulk_get = true, bulk_update = false, id_key = "id") {
+  constructor(api_url, id_key = "id") {
     super();
     if (api_url.slice(-1) == "/") api_url = api_url.substring(0, api_url.length - 1);
     try {
@@ -1565,8 +1559,6 @@ var DHREST = class extends DHTabular {
     } catch {
       this.api_url = new URL(api_url, window.location.origin);
     }
-    this._bulk_get_enabled = bulk_get;
-    this._bulk_update_enabled = bulk_update;
     this._cache_bust_enabled = true;
     this._id_key = id_key;
     this.push_conflict_res = PUSH_CONFLICT_RESOLUTIONS.WITH_EXCEPTION;
@@ -1595,8 +1587,8 @@ var DHREST = class extends DHTabular {
    */
   async pull() {
     let ids_missing = [];
-    this._tracked_ids.forEach((id2) => {
-      if (this._data[id2] == void 0) ids_missing.push(id2);
+    this._tracked_ids.forEach((id) => {
+      if (this._data[id] == void 0) ids_missing.push(id);
     });
     let ids_to_pull = [.../* @__PURE__ */ new Set([...this._marked_ids, ...ids_missing])];
     return this._get_many(ids_to_pull).then(() => {
@@ -1620,14 +1612,14 @@ var DHREST = class extends DHTabular {
   async push() {
     let change_map = this._local_data_xor();
     return this._put_many(change_map).then(() => {
-      Object.keys(this._data).forEach((id2) => {
+      Object.keys(this._data).forEach((id) => {
         this._all_keys = [.../* @__PURE__ */ new Set([
-          ...Object.keys(this._data[id2]),
-          ...Object.keys(this._data_from_server[id2])
+          ...Object.keys(this._data[id]),
+          ...Object.keys(this._data_from_server[id])
         ])];
         this._all_keys.forEach((k) => {
-          if (this._data[id2][k] != this._data_from_server[id2][k]) {
-            this._push_resolve_conflict(id2, k);
+          if (this._data[id][k] != this._data_from_server[id][k]) {
+            this._push_resolve_conflict(id, k);
           }
         });
       });
@@ -1656,13 +1648,13 @@ var DHREST = class extends DHTabular {
    * @param {*} id The ID of the object with a conflict.
    * @param {string} k The key to the data dict where the conflict was noticed.
    */
-  _push_resolve_conflict(id2, k) {
+  _push_resolve_conflict(id, k) {
     if (this.push_conflict_res == PUSH_CONFLICT_RESOLUTIONS.WITH_EXCEPTION) {
-      throw new Error(`Push conflict when updating <${this.constructor.name}:${id2}> - key '${k}'was nominally updated but not reported by server. Value was changed from${this._data_from_server[id2][k]} to ${this._data[id2][k]}`);
+      throw new Error(`Push conflict when updating <${this.constructor.name}:${id}> - key '${k}'was nominally updated but not reported by server. Value was changed from${this._data_from_server[id][k]} to ${this._data[id][k]}`);
     } else if (this.push_conflict_res == PUSH_CONFLICT_RESOLUTIONS.KEEP_CHANGES) {
-      this._data_from_server[id2][k] = this._data[id2][k];
+      this._data_from_server[id][k] = this._data[id][k];
     } else if (this.push_conflict_res == PUSH_CONFLICT_RESOLUTIONS.DISCARD_CHANGES) {
-      this._data[id2][k] = this._data_from_server[id2][k];
+      this._data[id][k] = this._data_from_server[id][k];
     }
   }
   /**
@@ -1688,11 +1680,11 @@ var DHREST = class extends DHTabular {
    * @param {*} id The ID to get a URL for, or undefined for base URL e.g. /api/url/
    * @returns {URL} Of the form www.xxxxxx.com/api/url/id
    */
-  _url_for(id2) {
-    if (id2) {
-      return new URL(id2, this.api_url + "/");
+  _url_for(id) {
+    if (id) {
+      return new URL(id, this.api_url + "/");
     } else {
-      return this.api_url;
+      return new URL(this.api_url);
     }
   }
   /**
@@ -1709,17 +1701,17 @@ var DHREST = class extends DHTabular {
    * 
    * @returns {Promise} That will resolve with the new ID as an argument when the new record has been created.
    */
-  async create(data2) {
+  async create(data) {
     return new Promise((res, rej) => {
-      return this._create(data2).then((returned_data) => {
+      return this._create(data).then((returned_data) => {
         if (!(this._id_key in returned_data)) {
           rej(
             `When creating new ${this.constructor.name} record, returned data did not contain an ID on key '${this._id_key}'. Check that the id_key constructor param is correct.`
           );
         }
-        let id2 = returned_data[this._id_key];
-        this._local_data_set_from_server(id2, returned_data);
-        res(id2);
+        let id = returned_data[this._id_key];
+        this._local_data_set_from_server(id, returned_data);
+        res(id);
       }).catch((e) => {
         rej(e);
       });
@@ -1735,12 +1727,12 @@ var DHREST = class extends DHTabular {
    * 
    * @returns {Promise} That will resolve with the returned data as an argument when the new record has been created.
    */
-  async _create(data2) {
+  async _create(data) {
     return fetch(
       this._url_for(void 0),
       {
         method: "POST",
-        body: JSON.stringify(data2),
+        body: JSON.stringify(data),
         headers: JSON_HEADERS
       }
     ).then((response) => {
@@ -1763,10 +1755,10 @@ var DHREST = class extends DHTabular {
    * 
    * @returns {Promise} That will resolve when the record has successfully been deleted.
    */
-  async delete(id2) {
-    return this._delete(id2).then(() => {
-      this.data_delete_record(id2);
-      this.untrack_ids([id2]);
+  async delete(id) {
+    return this._delete(id).then(() => {
+      this.data_delete_record(id);
+      this.untrack_ids([id]);
     });
   }
   /**
@@ -1778,10 +1770,10 @@ var DHREST = class extends DHTabular {
    * 
    * @returns {Promise} That will resolve when the record has successfully been deleted.
    */
-  async _delete(id2) {
+  async _delete(id) {
     return new Promise((res, rej) => {
       fetch(
-        this._url_for(id2),
+        this._url_for(id),
         {
           method: "DELETE"
         }
@@ -1789,7 +1781,7 @@ var DHREST = class extends DHTabular {
         if (response.status == 200) {
           res();
         } else {
-          rej(`Deletion of <${this.constructor.name}:${id2}> fails with code ${response.status}`);
+          rej(`Deletion of <${this.constructor.name}:${id}> fails with code ${response.status}`);
         }
       });
     });
@@ -1813,8 +1805,7 @@ var DHREST = class extends DHTabular {
     return new Promise((res, rej) => {
       let altered_url = this._url_for(void 0);
       if (filter_data) {
-        altered_url = new URL(this._url_for(void 0) + "_get_filtered");
-        altered_url.searchParams.append("filter", btoa(JSON.stringify(filter_data)));
+        altered_url.searchParams.append("filter", encodeURIComponent(JSON.stringify(filter_data)));
       }
       let opts = {
         method: "GET"
@@ -1835,8 +1826,8 @@ var DHREST = class extends DHTabular {
             response.status
           ));
         }
-      }).then((data2) => {
-        res(data2);
+      }).then((data) => {
+        res(data);
       });
     });
   }
@@ -1847,7 +1838,7 @@ var DHREST = class extends DHTabular {
    * 
    * @returns {Promise} A promise that will resolve with data for this record
    */
-  async _get(id2) {
+  async _get(id) {
     return new Promise((res, rej) => {
       let opts = {
         method: "GET"
@@ -1856,16 +1847,16 @@ var DHREST = class extends DHTabular {
         opts.cache = "no-store";
       }
       fetch(
-        this._url_for(id2),
+        this._url_for(id),
         opts
       ).then((response) => {
         if (response.status == 200) {
           return response.json();
         } else {
-          rej(`Get data for <${this.constructor.name}:${id2}> fails with code ${response.status}`);
+          rej(`Get data for <${this.constructor.name}:${id}> fails with code ${response.status}`);
         }
-      }).then((data2) => {
-        res(data2);
+      }).then((data) => {
+        res(data);
       });
     });
   }
@@ -1877,72 +1868,20 @@ var DHREST = class extends DHTabular {
    * 
    * @returns {Promise} A promise that will resolve with new data for this record
    */
-  async _put(id2, data2) {
+  async _put(id, data) {
     return new Promise((res, rej) => {
       fetch(
-        this._url_for(id2),
+        this._url_for(id),
         {
           method: "PUT",
-          body: JSON.stringify(data2),
+          body: JSON.stringify(data),
           headers: JSON_HEADERS
         }
       ).then((response) => {
         if (response.status == 200) {
           return response.json();
         } else {
-          rej(`Update data for <${this.constructor.name}:${id2}> fails with code ${response.status}`);
-        }
-      }).then((data3) => {
-        res(data3);
-      });
-    });
-  }
-  /**
-   * Fire a bulk get command against the API. This method is more efficient than firing many individual GET
-   * commands. However, there seems to be no generally accepted format for this. Furthermore, it mostly
-   * mitigates the advantages of caching.
-   * 
-   * Bulk get, on my systems, is achieved by sending a URL parameter along with a GET request to the general
-   * API URL. The format of this parameter is:
-   * 
-   * ```
-   * "/api/url/object?ids=BASE_64_ENCODED_ID_LIST"
-   * 
-   * let BASE_64_ENCODED_ID_LIST = btoa(JSON.stringify(id_list))
-   * ```
-   * 
-   * This has the consequence of enforcing only UTF-8 characters for ID's, which I am Ok with.
-   * 
-   * I intend to do some research with this method, in fact, and find whether caching and getting single
-   * resources can perform better than multi-fetch in the long run. But that relies on discovering a safe
-   * way to cache resources that might one day change, as they are after all in a database. Hmm...
-   * 
-   * @param {Array} ids ID's to get information for.
-   * 
-   * @returns {Promise} That resolves with a data_map of id to Object with data for all requested ID's.
-   */
-  async _get_bulk(ids) {
-    let altered_url = new URL(this._url_for(void 0) + "_get_bulk");
-    altered_url.searchParams.append("ids", btoa(JSON.stringify(ids)));
-    return new Promise((res, rej) => {
-      if (ids.length == 0) {
-        res({});
-        return;
-      }
-      let opts = {
-        method: "GET"
-      };
-      if (this._cache_bust_enabled) {
-        opts.cache = "no-store";
-      }
-      fetch(
-        altered_url,
-        opts
-      ).then((response) => {
-        if (response.status == 200) {
-          return response.json();
-        } else {
-          rej(`Update data for <${this.constructor.name}:${ids}> fails with code ${response.status}`);
+          rej(`Update data for <${this.constructor.name}:${id}> fails with code ${response.status}`);
         }
       }).then((data2) => {
         res(data2);
@@ -1950,41 +1889,8 @@ var DHREST = class extends DHTabular {
     });
   }
   /**
-   * Fire a bulk update command against the API. This method is more efficient than firing many individual
-   * PUT requests, and furthermore does not have any downsides as caching was never an option.
-   * 
-   * Bulk put, on my systems, is achieved by sending a dict of the form:
-   * 
-   * ```
-   * {
-   * 		1: {key: val, key2: val2, ...}
-   * 		2: {key: val, key2: val2, ...}
-   * 		...
-   * 		n: {key: val, key2: val2, ...}
-   * }
-   * ```
-   * 
-   * With an id-mapped data object for all ID's to update.
-   * 
-   * @param {Object} data_map ID-mapped Objects which contain 'data' for classic PUT requests.
-   * 
-   * @returns {Promise} A promise that will resolve a similar ID map with whatever was updated.
-   */
-  async _put_bulk(data_map) {
-    throw "TODO Not yet implemented... need to think about how errors and discrepancies are handled.";
-    return fetch(
-      this._url_for(id),
-      {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: JSON_HEADERS
-      }
-    );
-  }
-  /**
    * This is an internal helper method which will contact the server to get a new, full
-   * set of data for every ID included. Depending on instance configuration, this will either do so
-   * with a bulk operation (GET /api/noun?ids=[1, 2, 3]) or by making many individual GET requests
+   * set of data for every ID included. This will make many individual GET requests
    * (GET /api/noun/1, GET /api/noun/2, ...).
    * 
    * @param {Array} ids The ID's to fetch.
@@ -1992,51 +1898,38 @@ var DHREST = class extends DHTabular {
    * @returns {Promise} A promise that will resolve without args when all id's have been gotten and stored
    */
   async _get_many(ids) {
-    if (this._bulk_get_enabled) {
-      return this._get_bulk(ids).then((data_map) => {
-        Object.entries(data_map).forEach(([id2, data2]) => {
-          this._local_data_set_from_server(id2, data2);
+    var all_promises = [];
+    ids.forEach((id) => {
+      let get_and_set = new Promise((res, rej) => {
+        this._get(id).then((data_returned) => {
+          this._local_data_set_from_server(id, data_returned);
+          res();
         });
       });
-    } else {
-      var all_promises = [];
-      ids.forEach((id2) => {
-        let get_and_set = new Promise((res, rej) => {
-          this._get(id2).then((data_returned) => {
-            this._local_data_set_from_server(id2, data_returned);
-            res();
-          });
-        });
-        all_promises.push(get_and_set);
-      });
-      return Promise.all(all_promises);
-    }
+      all_promises.push(get_and_set);
+    });
+    return Promise.all(all_promises);
   }
   /**
    * This is an internal helper method which will cause the server to update records for all object data
-   * in the provided data_map. Depending on instance configuration, this will either use a bulk update
-   * operation or spawn a great many individual updates.
+   * in the provided data_map. This will spawn a great many individual updates.
    * 
    * @param {Object} data_map ID-mapped Objects which contain 'data' for classic PUT requests.
    * 
    * @returns {Promise} A promise that will resolve with no args when all updates are complete.
    */
   async _put_many(data_map) {
-    if (this._bulk_update_enabled) {
-      return this._put_bulk(data_map);
-    } else {
-      var all_promises = [];
-      Object.entries(data_map).forEach(([id2, data2]) => {
-        let put_and_set = new Promise((res, rej) => {
-          this._put(id2, data2).then((data_returned) => {
-            this._local_data_set_from_server(id2, data_returned);
-            res();
-          });
+    var all_promises = [];
+    Object.entries(data_map).forEach(([id, data]) => {
+      let put_and_set = new Promise((res, rej) => {
+        this._put(id, data).then((data_returned) => {
+          this._local_data_set_from_server(id, data_returned);
+          res();
         });
-        all_promises.push(put_and_set);
       });
-      return Promise.all(all_promises);
-    }
+      all_promises.push(put_and_set);
+    });
+    return Promise.all(all_promises);
   }
   /**
    * This is a handy piece of automation that will track all ID's available. This might be quite a few,
@@ -2052,9 +1945,9 @@ var DHREST = class extends DHTabular {
       this.track_ids(ids);
     });
   }
-  data_delete_record(id2) {
-    super.data_delete_record(id2);
-    delete this._data_from_server[id2];
+  data_delete_record(id) {
+    super.data_delete_record(id);
+    delete this._data_from_server[id];
   }
   /**
    * Track the provided list of ID's.
@@ -2077,12 +1970,12 @@ var DHREST = class extends DHTabular {
    */
   untrack_ids(ids) {
     for (var x = ids.length - 1; x >= 0; x--) {
-      let id2 = ids[x];
-      var index = this._tracked_ids.indexOf(id2);
+      let id = ids[x];
+      var index = this._tracked_ids.indexOf(id);
       if (index != -1) {
         this._tracked_ids.splice(index, 1);
       }
-      this.data_delete_record(id2);
+      this.data_delete_record(id);
     }
   }
   /**
@@ -2104,10 +1997,10 @@ var DHREST = class extends DHTabular {
    * @param {*} id The ID of the record
    * @param {Object} data The data that corresponds with this object (some or all)
    */
-  _local_data_set_from_server(id2, data2) {
-    this.data_update_record(id2, data2);
-    if (this._data_from_server[id2] == void 0) this._data_from_server[id2] = {};
-    Object.assign(this._data_from_server[id2], data2);
+  _local_data_set_from_server(id, data) {
+    this.data_update_record(id, data);
+    if (this._data_from_server[id] == void 0) this._data_from_server[id] = {};
+    Object.assign(this._data_from_server[id], data);
   }
   /**
    * Compare the local data to the local cache of server data and see if we've made any local
@@ -2119,10 +2012,10 @@ var DHREST = class extends DHTabular {
    */
   _local_data_xor() {
     var data_map = {};
-    Object.keys(this._data_from_server).forEach((id2) => {
-      var server_data = this._data_from_server[id2], local_data = this._data[id2], diffs = {};
+    Object.keys(this._data_from_server).forEach((id) => {
+      var server_data = this._data_from_server[id], local_data = this._data[id], diffs = {};
       if (local_data == void 0) {
-        throw `Local record for '${id2}' does not exist in local data. Something has gone wrong.`;
+        throw `Local record for '${id}' does not exist in local data. Something has gone wrong.`;
       }
       Object.keys(server_data).forEach((k) => {
         if (server_data[k] != local_data[k]) {
@@ -2130,7 +2023,7 @@ var DHREST = class extends DHTabular {
         }
       });
       if (Object.keys(diffs).length > 0) {
-        data_map[id2] = diffs;
+        data_map[id] = diffs;
       }
     });
     return data_map;
@@ -3922,19 +3815,19 @@ var DispatchClientJS = class {
    */
   call_server_function(function_name, ...args) {
     var params = encodeURIComponent(JSON.stringify(args)), permanent_data = encodeURIComponent(JSON.stringify(this.base_data));
-    var data2 = {
+    var data = {
       "jsonrpc": "2.0",
       "method": function_name,
       "params": params,
       "id": this.session_id,
       "__dispatch__permanent_data": permanent_data
     };
-    var debug_datastring = JSON.stringify(data2), mlen = Math.min(debug_datastring.length, 256);
+    var debug_datastring = JSON.stringify(data), mlen = Math.min(debug_datastring.length, 256);
     if (function_name != "__dispatch__client_poll") {
       this.log_debug("Calling " + function_name + " with " + debug_datastring.substring(0, mlen));
     }
     return new Promise((res, rej) => {
-      this.get_json(this.dispatch_url, data2).then((response_data) => {
+      this.get_json(this.dispatch_url, data).then((response_data) => {
         var result = response_data.result;
         var error = response_data.error;
         if (result != void 0) {
@@ -3968,11 +3861,11 @@ var DispatchClientJS = class {
    * @returns {Promise} A promise that will resolve upon receiving a 200 with the result data
    * 	or reject (upon non-200) with arguments (code, message)
    */
-  get_json(url, data2) {
+  get_json(url, data) {
     return new Promise((res, rej) => {
       var xhr = new XMLHttpRequest();
       var param_string = "";
-      for (const [key, val] of Object.entries(data2)) {
+      for (const [key, val] of Object.entries(data)) {
         param_string += encodeURIComponent(key) + "=" + encodeURIComponent(val) + "&";
       }
       xhr.open("POST", url, true);
@@ -5035,7 +4928,10 @@ var RegSWNav = class extends RegionSwitchyard {
     if (page_name == void 0) throw new Error(`Url '${url}' can not be parsed to page name.`);
     return this.swyd.dh_page.list({ "name": page_name }).then((ids) => {
       if (ids.length == 0) {
-        throw new Error(`Page '${page_name}' does not exist.`);
+        let e = new Error(`Page '${page_name}' does not exist.`);
+        e._nonexist = true;
+        e._page_name = page_name;
+        throw e;
       }
       return this.swyd.page_nav(ids[0]);
     });
@@ -5046,7 +4942,7 @@ var RegSWNav = class extends RegionSwitchyard {
    * 
    * @param {Number} id The ID of the page to navigate gracefully to.
    */
-  async page_nav(id2) {
+  async page_nav(id) {
     let promise_unsaved = Promise.resolve();
     if (this.swyd.reg_editor.has_unsaved_changes) {
       promise_unsaved = this.swyd.reg_two_choice.present_choice(
@@ -5057,7 +4953,7 @@ var RegSWNav = class extends RegionSwitchyard {
       );
     }
     return promise_unsaved.then(() => {
-      return this.page_set(id2);
+      return this.page_set(id);
     });
   }
   /**
@@ -5072,13 +4968,13 @@ var RegSWNav = class extends RegionSwitchyard {
    * 
    * @returns {Promise} A promise that resolves when the new page has been selected and all resources loaded.
    */
-  async page_set(id2, prevent_rollback) {
+  async page_set(id, prevent_rollback) {
     let prev_id = this.settings.page_id;
     this.settings.page_loading = true;
-    if (id2 == void 0) {
+    if (id == void 0) {
       throw "ID was undefined - reset all page tracking DH's and regions.";
     }
-    this.dh_page_resource.current_page_set(id2);
+    this.dh_page_resource.current_page_set(id);
     let wait = new Promise((res, rej) => {
       window.setTimeout(() => {
         res();
@@ -5109,12 +5005,12 @@ var RegSWNav = class extends RegionSwitchyard {
       }
       throw e;
     }).then(() => {
-      this.dh_page.track_ids([id2]);
+      this.dh_page.track_ids([id]);
       return this.dh_page.pull();
     }).then(() => {
-      this.settings.page_id = id2;
-      page = this.dh_page.comp_get(id2);
-      this.dh_page_content.track(id2, page.page_url);
+      this.settings.page_id = id;
+      page = this.dh_page.comp_get(id);
+      this.dh_page_content.track(id, page.page_url);
       this.reg_coords.settings.local_page_name = page.name;
     }).then(() => {
       return this.dh_page_resource.pull();
@@ -5123,7 +5019,7 @@ var RegSWNav = class extends RegionSwitchyard {
     }).then(() => {
       return this._load_entire_graph();
     }).then(() => {
-      return this.dh_edge.track_all_for_page(id2);
+      return this.dh_edge.track_all_for_page(id);
     }).then(() => {
       return this.dh_edge.pull();
     }).then(() => {
@@ -5240,8 +5136,8 @@ var RegSWNav = class extends RegionSwitchyard {
    * Overridden here to load user before rest of load is proceeded with.
    */
   async _load_special() {
-    return this.dispatch.call_server_function("get_logged_in_user_id").then((data2) => {
-      return this.set_user(data2["id"]);
+    return this.dispatch.call_server_function("get_logged_in_user_id").then((data) => {
+      return this.set_user(data["id"]);
     });
   }
   async _load_datahandlers() {
@@ -5278,9 +5174,9 @@ var RegSWNav = class extends RegionSwitchyard {
     this.reg_loading.fade_out();
     window.addEventListener("hashchange", () => {
       if (window.location.hash == this.settings.last_hash) return;
-      this._select_default_page().then((id2) => {
+      this._select_default_page().then((id) => {
         this.settings.last_hash = window.location.hash;
-        return this.page_set(id2);
+        return this.page_set(id);
       });
     });
     if (this.settings.page_id != void 0) {
@@ -5550,10 +5446,16 @@ var RegMap = class extends Region {
     this._setup_pan_and_zoom_handlers();
   }
   /**
-   * Bind the event handlers that allow a 'pan' operation to occur via click-and-drag. This is not a drag
-   * event.
+   * Bind handlers that allow pan and zoom in the map for both click and touch events.
    */
   _setup_pan_and_zoom_handlers() {
+    this._setup_pan_and_zoom_handlers_click();
+    this._setup_pan_and_zoom_handlers_touch();
+  }
+  /**
+   * Bind the event handlers that allow a 'pan' operation to occur via click-and-drag.
+   */
+  _setup_pan_and_zoom_handlers_click() {
     this._clickdrag = {
       lmb_held: false,
       rmb_held: false,
@@ -5597,6 +5499,83 @@ var RegMap = class extends Region {
       );
       this._zoom_at(this._wheel.accrued_delta, p_vp_cursor);
       this._wheel.accrued_delta = 0;
+    }));
+  }
+  /**
+   * Bind the event handlers that allow a 'pan' operation to occur via touch-and-drag.
+   */
+  _setup_pan_and_zoom_handlers_touch() {
+    this._touchdrag = {
+      A: { x: 0, y: 0 },
+      B: { x: 0, y: 0 },
+      center_last: { x: 0, y: 0 },
+      n: 0,
+      dist_last: 0
+    };
+    let touch_update = /* @__PURE__ */ __name((e) => {
+      if (e.touches.length > 1) {
+        this._touchdrag.B.x = e.touches[1].clientX;
+        this._touchdrag.B.y = e.touches[1].clientY;
+      }
+      if (e.touches.length > 0) {
+        this._touchdrag.A.x = e.touches[0].clientX;
+        this._touchdrag.A.y = e.touches[0].clientY;
+      }
+      this._touchdrag.n = e.touches.length;
+      this._touchdrag.center_last = get_touch_center(e);
+      this._touchdrag.dist_last = get_touch_dist(e);
+    }, "touch_update");
+    let get_touch_center = /* @__PURE__ */ __name((e) => {
+      if (this._touchdrag.n == 1) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      if (this._touchdrag.n == 2) {
+        return {
+          x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+          y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+        };
+      }
+    }, "get_touch_center");
+    let get_touch_dist = /* @__PURE__ */ __name((e) => {
+      if (e.touches.length != 2) return 0;
+      return new Vector2D(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      ).magnitude;
+    }, "get_touch_dist");
+    this.reg.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.touches.length > 2) return;
+      touch_update(e);
+    });
+    this.reg.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._touchdrag.n = 0;
+    });
+    this.reg.addEventListener("touchmove", throttle_leading(1e3 / 120, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this._touchdrag.n == 0 || this._touchdrag.n > 2) return;
+      let center = get_touch_center(e);
+      if (this._touchdrag.n > 0) {
+        this._pan_by(
+          new Vector2D(
+            center.x - this._touchdrag.center_last.x,
+            center.y - this._touchdrag.center_last.y
+          )
+        );
+      }
+      if (this._touchdrag.n > 1) {
+        let bb = this.reg.getBoundingClientRect();
+        let p_vp_cursor = new Vector2D(
+          center.x - bb.x - bb.width / 2,
+          center.y - bb.y - bb.height / 2
+        );
+        this._zoom_at(3 * (get_touch_dist(e) - this._touchdrag.dist_last), p_vp_cursor);
+      }
+      touch_update(e);
     }));
   }
   /**
@@ -5701,18 +5680,18 @@ var RegMap = class extends Region {
    */
   network_construct() {
     let edges = {}, nodes = {};
-    Object.entries(this.swyd.dh_edge._data).forEach(([id2, data2]) => {
-      edges[id2] = {
-        id: id2,
-        nid_orig: data2.page_id_orig,
-        nid_term: data2.page_id_term,
-        wt: data2.bond_strength_cached
+    Object.entries(this.swyd.dh_edge._data).forEach(([id, data]) => {
+      edges[id] = {
+        id,
+        nid_orig: data.page_id_orig,
+        nid_term: data.page_id_term,
+        wt: data.bond_strength_cached
       };
     });
-    Object.entries(this.swyd.dh_page._data).forEach(([id2, data2]) => {
-      nodes[id2] = {
-        id: id2,
-        wt: 1 + data2.mass_cached / 1e3
+    Object.entries(this.swyd.dh_page._data).forEach(([id, data]) => {
+      nodes[id] = {
+        id,
+        wt: 1 + data.mass_cached / 1e3
       };
     });
     let full_network = new Network(nodes, edges, this.swyd.settings.page_id);
@@ -6018,7 +5997,20 @@ var RegViewport = class extends Region {
    */
   _on_iframe_href_nav_event(e) {
     let target_url = e.detail.link;
-    this.swyd.page_nav_url(target_url);
+    this.swyd.page_nav_url(target_url).catch((e2) => {
+      if (e2._nonexist) {
+        this.swyd.reg_two_choice.present_choice(
+          "Create New Page?",
+          `The page '${e2._page_name}' does not yet exist. Would you like to create it?`,
+          "No",
+          "Yes"
+        ).then(() => {
+          this.swyd.reg_page_new.activate();
+          this.swyd.reg_page_new.settings.page_name = e2._page_name;
+          this.swyd.render();
+        });
+      }
+    });
   }
   /**
    * This method handles custom events generated by the iframe tap for title update.
@@ -7295,6 +7287,10 @@ var RegNewPage = class _RegNewPage extends Region {
         return this.swyd.dh_page.create(this.settings.page_read_access, name);
       }).then((_new_id) => {
         new_id = _new_id;
+        return this.swyd.dispatch.call_server_function("update_scan_for_page", this.swyd.settings.page_id);
+      }).then((_new_id) => {
+        return this.swyd.dh_page.network_update_for_page(this.swyd.dh_edge, this.swyd.settings.page_id);
+      }).then(() => {
         return this.swyd.dispatch.call_server_function("page_set_content", new_id, preset_html);
       }).then(() => {
         return this.swyd.page_set(new_id);
@@ -8310,6 +8306,7 @@ var RegLogin = class extends Region {
 					
 					opacity: 100%;
 					background-color: var(--white-off);
+					overflow: hidden;
 				}
 				& .constellation {
 					top: 0; left: 0;
@@ -8514,14 +8511,17 @@ var RegLogin = class extends Region {
 							<div class='cont-interface'>
 								<machine class='interface'>
 									<div class='title'> Navigator Login </div>
-									<div class='interface-rec'>
-										<div class='terminal input-line'>
-											<div rfm_member='login_email' name='email' autocomplete='email'></div>
+									<!--Form is required for autofill to work.-->
+									<form style='width: 100%'>
+										<div class='interface-rec'>
+											<div class='terminal input-line'>
+												<div rfm_member='login_email' name='email'></div>
+											</div>
+											<div class='terminal input-line'>
+												<div rfm_member='login_password' name='password'></div>
+											</div>
 										</div>
-										<div class='terminal input-line'>
-											<div rfm_member='login_password' name='password' autocomplete='password'></div>
-										</div>
-									</div>
+									</form>
 									<div class='row'>
 										<button rfm_member='btn_login' class='button'>Login</button>
 										<button rfm_member='btn_to_signup' class='button'>New</button>
@@ -8577,17 +8577,20 @@ var RegLogin = class extends Region {
       text_right: "NAVIGATOR"
     }).fab().link(this, this.constellation);
     this.regin_login_email = new RegInInput().fab().link(this, this.login_email, this.settings, "login_email");
+    this.regin_login_email.member_get("input").setAttribute("type", "email");
     this.regin_login_email.member_get("input").setAttribute("placeholder", "Email");
+    this.regin_login_email.member_get("input").setAttribute("autocomplete", "email");
     this.regin_login_password = new RegInInput().fab().link(this, this.login_password, this.settings, "login_password");
     this.regin_login_password.member_get("input").setAttribute("placeholder", "Password");
     this.regin_login_password.member_get("input").setAttribute("type", "password");
+    this.regin_login_password.member_get("input").setAttribute("autocomplete", "password");
     this.regin_new_email = new RegInInput().fab().link(this, this.new_email, this.settings, "new_email");
     this.regin_new_email.member_get("input").setAttribute("placeholder", "Email");
     this.regin_new_password = new RegInInput().fab().link(this, this.new_password, this.settings, "new_password");
     this.regin_new_password.member_get("input").setAttribute("placeholder", "Password");
     this.regin_new_password.member_get("input").setAttribute("type", "password");
     this.regin_new_password2 = new RegInInput().fab().link(this, this.new_password2, this.settings, "new_password2");
-    this.regin_new_password2.member_get("input").setAttribute("placeholder", "Password");
+    this.regin_new_password2.member_get("input").setAttribute("placeholder", "Confirm Password");
     this.regin_new_password2.member_get("input").setAttribute("type", "password");
   }
   _on_link_post() {
@@ -8635,8 +8638,8 @@ var RegLogin = class extends Region {
       this.render();
       return;
     }
-    this.swyd.dispatch.call_server_function("login", email, pw).then((id2) => {
-      return this.swyd.set_user(id2);
+    this.swyd.dispatch.call_server_function("login", email, pw).then((id) => {
+      return this.swyd.set_user(id);
     }).then(() => {
       this.deactivate();
     }).catch((e) => {
@@ -8667,7 +8670,7 @@ var RegLogin = class extends Region {
       this.render();
       return;
     }
-    this.swyd.dispatch.call_server_function("account_create", email, password).then((id2) => {
+    this.swyd.dispatch.call_server_function("account_create", email, password).then((id) => {
       this.settings.message = "Account created! Now log in.";
       this.settings.interface = 0;
       this.render();
@@ -8792,11 +8795,11 @@ var DHPage = class extends DHREST {
    * @returns {Promise} That will resolve with the new ID as an argument when the new record has been created
    */
   create(read_access, name = void 0) {
-    let data2 = {
+    let data = {
       read_access_int: read_access
     };
-    if (name != void 0) data2["name"] = name;
-    return super.create(data2);
+    if (name != void 0) data["name"] = name;
+    return super.create(data);
   }
   /**
    * Get a component instance of the relevant type for this DataHandler. Component instances are really
@@ -8809,8 +8812,8 @@ var DHPage = class extends DHREST {
    * @param {*} id The ID to get a component for.
    * @returns {CompPage}
    */
-  comp_get(id2) {
-    return new CompPage(id2, this);
+  comp_get(id) {
+    return new CompPage(id, this);
   }
   /**
    * TODO finish this method. It will be quite complex, but very efficient. 
@@ -8993,8 +8996,8 @@ var DHPageContent = class extends DataHandler {
    * @param {Number} id The ID of the page to track
    * @param {String} url The URL of the page to track
    */
-  track(id2, url) {
-    this._tracked_page_id = id2;
+  track(id, url) {
+    this._tracked_page_id = id;
     this._tracked_page_url = url;
   }
   generate_checksum() {
@@ -9029,9 +9032,9 @@ var DHPageResource = class extends DHREST {
    * @param {*} id The ID to get a URL for, or undefined for base URL e.g. /api/url/
    * @returns {URL} Of the form www.xxxxxx.com/api/url/id
    */
-  _url_for(id2) {
-    if (id2) {
-      return new URL(this.current_page_id + "/resource/" + id2, this.api_url + "/");
+  _url_for(id) {
+    if (id) {
+      return new URL(this.current_page_id + "/resource/" + id, this.api_url + "/");
     } else {
       return new URL(this.current_page_id + "/resource", this.api_url + "/");
     }
@@ -9062,19 +9065,19 @@ var DHPageResource = class extends DHREST {
         let payload = file.slice(start_loc, end_loc);
         let _start_loc = start_loc;
         promise_fns.push(() => {
-          return this._create(file_name, payload, _start_loc).then((data2) => {
+          return this._create(file_name, payload, _start_loc).then((data) => {
             prog_cb(end_loc / file.size);
-            return data2;
+            return data;
           });
         });
         start_loc = end_loc;
       }
       return serial_promises(promise_fns).then((returned_data_list) => {
         let final_data = returned_data_list.pop();
-        let id2 = final_data[this._id_key];
+        let id = final_data[this._id_key];
         if (file.size != final_data.size) throw new Error("Error in upload: resulting filesizes do not match.");
-        this._local_data_set_from_server(id2, final_data);
-        res(id2);
+        this._local_data_set_from_server(id, final_data);
+        res(id);
       });
     });
   }
@@ -9111,7 +9114,7 @@ var DHPageResource = class extends DHREST {
   /**
    * Disable _put and push() manually.
    */
-  async _put(id2, data2) {
+  async _put(id, data) {
     throw new Error("PUT is not allowed for this type of resource.");
   }
   /**
@@ -9167,10 +9170,10 @@ var DHEdge = class extends DHREST {
    */
   get_edges_for_page(page_id) {
     let out = [];
-    Object.entries(this._data).forEach(([id2, data2]) => {
-      id2 = Number(id2);
-      if (data2.page_id_term == page_id || data2.page_id_orig == page_id) {
-        out.push(this.comp_get(id2));
+    Object.entries(this._data).forEach(([id, data]) => {
+      id = Number(id);
+      if (data.page_id_term == page_id || data.page_id_orig == page_id) {
+        out.push(this.comp_get(id));
       }
     });
     return out;
@@ -9186,8 +9189,8 @@ var DHEdge = class extends DHREST {
    * @param {*} id The ID to get a component for.
    * @returns {CompEdge}
    */
-  comp_get(id2) {
-    return new CompEdge(id2, this);
+  comp_get(id) {
+    return new CompEdge(id, this);
   }
 };
 
@@ -9356,11 +9359,11 @@ var Network = class _Network {
   constructor(nodes, edges, focal_point_id, mean_dist = 1) {
     this.nodes = {};
     this.edges = {};
-    Object.values(nodes).forEach((data2) => {
-      this.nodes[data2.id] = { id: data2.id, wt: data2.wt };
+    Object.values(nodes).forEach((data) => {
+      this.nodes[data.id] = { id: data.id, wt: data.wt };
     });
-    Object.values(edges).forEach((data2) => {
-      this.edges[data2.id] = { id: data2.id, wt: data2.wt, nid_orig: data2.nid_orig, nid_term: data2.nid_term };
+    Object.values(edges).forEach((data) => {
+      this.edges[data.id] = { id: data.id, wt: data.wt, nid_orig: data.nid_orig, nid_term: data.nid_term };
     });
     this.focal_point_id = focal_point_id;
     this.focal_node = this.nodes[this.focal_point_id];
@@ -9414,13 +9417,13 @@ var Network = class _Network {
       node.edges_orig = [];
       node.edges_term = [];
     });
-    Object.entries(this.edges).forEach(([id2, edge_data]) => {
+    Object.entries(this.edges).forEach(([id, edge_data]) => {
       if (this.nodes[edge_data.nid_orig] == void 0) throw new Error("Edge node ref not in node list.");
       if (this.nodes[edge_data.nid_term] == void 0) throw new Error("Edge node ref not in node list.");
-      this.nodes[edge_data.nid_orig].edges_orig.push(this.edges[id2]);
-      this.nodes[edge_data.nid_term].edges_term.push(this.edges[id2]);
-      this.edges[id2].node_orig = this.nodes[edge_data.nid_orig];
-      this.edges[id2].node_term = this.nodes[edge_data.nid_term];
+      this.nodes[edge_data.nid_orig].edges_orig.push(this.edges[id]);
+      this.nodes[edge_data.nid_term].edges_term.push(this.edges[id]);
+      this.edges[id].node_orig = this.nodes[edge_data.nid_orig];
+      this.edges[id].node_term = this.nodes[edge_data.nid_term];
     });
   }
   /**
@@ -9764,12 +9767,12 @@ var Network = class _Network {
    * preserved.
    */
   toJSON() {
-    let data2 = {
+    let data = {
       "nodes": [],
       "edges": []
     };
     Object.values(this.nodes).forEach((node) => {
-      data2.nodes.push({
+      data.nodes.push({
         id: node.id,
         x: node.pos.x,
         y: node.pos.y,
@@ -9777,14 +9780,14 @@ var Network = class _Network {
       });
     });
     Object.values(this.edges).forEach((edge) => {
-      data2.nodes.push({
+      data.nodes.push({
         id: edge.id,
         nid_orig: edge.nid_orig,
         nid_term: edge.nid_term,
         wt: edge.wt
       });
     });
-    return data2;
+    return data;
   }
 };
 
