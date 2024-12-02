@@ -1425,7 +1425,6 @@ var DHTabular = class extends DataHandler {
     return checksum_json([this._data, this._settings]);
   }
   /**
-   * @abstract
    * Get a component instance of the relevant type for this DataHandler. Component instances are really
    * just containers for code that store both their settings and data back here in the datahandler. Multiple
    * instances of a Component for the same ID will refer to the exact same locations in memory.
@@ -1433,11 +1432,16 @@ var DHTabular = class extends DataHandler {
    * This may be called any number of times in any number of places, and all instances of a component for a
    * certain ID will behave as if they are, in fact, the same component.
    * 
+   * The default behavior of this function will return a generic Component instance for the indicated record.
+   * If component-specific functions are desired, a child Component class can be created and this function
+   * overridden to return it in a child datahandler class.
+   * 
    * @param {*} id The ID to get a component for.
    * 
    * @returns {Component}
    */
   comp_get(id) {
+    return new Component(id, this);
   }
 };
 
@@ -1465,13 +1469,15 @@ var ErrorREST = class extends Error {
    * @param {String} operation An informal, plain english string describing what we were attempting
    * @param {String} method The HTTP method verb that was used e.g. GET or PUT
    * @param {Number} http_code The response HTTP code e.g. 200, 403
+   * @param {string} response_text The response text, which will hopefully help explain the issue.
    */
-  constructor(operation, method, http_code) {
-    super(`Operation '${operation}' fails with code ${http_code}`);
+  constructor(operation, method, http_code, response_text) {
+    super(`Operation '${operation}' fails with code ${http_code} and response text "${response_text}"`);
     this.data = {
       operation,
       method,
-      http_code
+      http_code,
+      response_text
     };
   }
 };
@@ -1678,6 +1684,7 @@ var DHREST = class extends DHTabular {
    * @returns {Promise} That will resolve with the returned data as an argument when the new record has been created.
    */
   async _create(data) {
+    let response;
     return fetch(
       this._url_for(void 0),
       {
@@ -1685,14 +1692,22 @@ var DHREST = class extends DHTabular {
         body: JSON.stringify(data),
         headers: JSON_HEADERS
       }
-    ).then((response) => {
+    ).then((_response) => {
+      response = _response;
       if (response.status == 200) {
         return response.json();
+      } else {
+        return response.text();
+      }
+    }).then((payload) => {
+      if (response.status == 200) {
+        return Promise.resolve(payload);
       } else {
         throw new ErrorREST(
           "Create new",
           "POST",
-          response.status
+          response.status,
+          payload
         );
       }
     });
@@ -1747,37 +1762,51 @@ var DHREST = class extends DHTabular {
    * Record data that is excluded from serialization (for example, user passhash) is not allowed for filtering
    * and will trip an error.
    * 
+   * **On Additional Params**
+   * If a url parameter takes the form `www.domain.com/route?param_key=param_val&...`, then the additional_params
+   * dict would resemble `{"param_key": "param_val"}`
+   * 
    * @param {Object} filter_data Optional data to filter response by.
+   * @param {Object} additional_params Optional additional url parameters to send to the API. See above.
    * 
    * @returns {Promise} That resolves with the list of ID's available.
    */
-  async list(filter_data) {
+  async list(filter_data, additional_params) {
     return new Promise((res, rej) => {
+      if (additional_params == void 0) additional_params = {};
+      if (filter_data != void 0) additional_params["filter"] = filter_data;
       let altered_url = this._url_for(void 0);
-      if (filter_data) {
-        altered_url.searchParams.append("filter", encodeURIComponent(JSON.stringify(filter_data)));
-      }
+      Object.entries(additional_params).forEach(([k, v]) => {
+        altered_url.searchParams.append(k, encodeURIComponent(JSON.stringify(v)));
+      });
       let opts = {
         method: "GET"
       };
       if (this._cache_bust_enabled) {
         opts.cache = "no-store";
       }
+      let response;
       fetch(
         altered_url,
         opts
-      ).then((response) => {
+      ).then((_response) => {
+        response = _response;
         if (response.status == 200) {
           return response.json();
+        } else {
+          return response.text();
+        }
+      }).then((payload) => {
+        if (response.status == 200) {
+          res(payload);
         } else {
           rej(new ErrorREST(
             "Fetch list of ID's",
             "GET",
-            response.status
+            response.status,
+            payload
           ));
         }
-      }).then((data) => {
-        res(data);
       });
     });
   }
@@ -2463,9 +2492,9 @@ var Region = class _Region {
     this.settings_refresh();
     this._active = true;
     this._on_activate_pre();
-    for (let x = 0; x < this.subregions.length; x++) {
-      this.subregions[x].activate();
-    }
+    Object.values(this.subregions).forEach((subreg) => {
+      subreg.activate();
+    });
     this.reg.show();
     this.swyd.focus_region_set(this);
     if (this.anchor.enabled) {

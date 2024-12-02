@@ -4,7 +4,7 @@
  */
 
 import {Region, Fabricator, RHElement, RegInInput, checksum_json, RegInCheckbox} from "../lib/regional.js"
-import {RegSWNav, RegNewPage, RegInCBTypeset} from "../nav.js"
+import {RegSWNav, RegNewPage, RegInCBTypeset, RegPageFriends} from "../nav.js"
 
 class RegAlterPage extends Region
 {
@@ -14,6 +14,7 @@ class RegAlterPage extends Region
 			[rfm_reg="RegAlterPage"] {
 				/* The absolute master container for the navigator. */
 				& .cont-main {
+					max-width: 100vw;
 					width: 40em;
 					display: flex;
 					flex-direction: column;
@@ -69,6 +70,7 @@ class RegAlterPage extends Region
 								Private <div rfm_member='cbp_private' class='cb-cont'></div>
 							</label>
 						</div>
+						<div rfm_member='access_list'></div>
 					</div>
 				</div>
 				<div class='cont-bot'>
@@ -106,6 +108,8 @@ class RegAlterPage extends Region
 	send
 	/** @type {RHElement}*/
 	close
+	/** @type {RHElement}*/
+	access_list
 
 	/** @description Settings object for this region. This is local data which is erased on page refresh. */
 	settings = {
@@ -133,6 +137,9 @@ class RegAlterPage extends Region
 			this.settings,
 			'page_read_access'
 		)
+
+		// Setup the access list subregion
+		this.reg_page_friends = new RegPageFriends().fab().link(this, this.access_list)
 	}
 
 	_on_link_post()
@@ -197,6 +204,16 @@ class RegAlterPage extends Region
 		let str_data = JSON.stringify(fwd_data).split("").reverse().join("")
 		this.punchrow_cont.empty()
 		this.punchrow_cont.append(RegNewPage.draw_punchrow(str_data))
+
+		// Read Access Controls for Friends
+		if(this.settings.page_read_access == 1)
+		{
+			this.access_list.show()
+		}
+		else
+		{
+			this.access_list.hide()
+		}
 
 		// Error
 		if(this.settings.error)

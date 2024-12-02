@@ -159,14 +159,22 @@ class RegEditor extends Region
 					transform: translate(0, 1.25em);
 					transition: 0.5s;
 				}
+				& .ribbon-sc {
+					text-decoration: wavy underline;
+				}
 			}
 		`
 		let html = /* html */`
 			<div class='cont-lectern'>
 				<div rfm_member='cont_papers' class='cont-papers'>
-					<div class='row'>
-						<button rfm_member='btn_apply' class='ribbon collapsed'> Apply </button>
-						<button rfm_member='btn_upload' class='ribbon collapsed'> Upload </button>
+					<div class='row' style='justify-content: space-between; width: 100%;'>
+						<div class='row'>
+							<button rfm_member='btn_apply' class='ribbon collapsed'> Apply </button>
+							<button rfm_member='btn_upload' class='ribbon collapsed'> Upload </button>
+						</div>
+						<div class='row' style='margin-right: 0.5em'>
+							<button rfm_member='btn_spellcheck' class='ribbon collapsed ribbon-sc'> SC </button>
+						</div>
 					</div>
 					<div rfm_member='cont_editor' class='cont-editor'>
 						<div class='ruler-row'>
@@ -228,6 +236,7 @@ class RegEditor extends Region
 
 		this.btn_apply.addEventListener("click", ()=>{this.code_apply()})
 		this.btn_upload.addEventListener("click", ()=>{this.code_upload()})
+		this.btn_spellcheck.addEventListener("click", ()=>{this.spellcheck_toggle()})
 
 		// Bind special key events
 		this.editor.textarea.addEventListener("keydown", (e)=>
@@ -325,6 +334,19 @@ class RegEditor extends Region
 	}
 
 	/**
+	 * Toggle whether spellcheck is on for the editor.
+	 */
+	spellcheck_toggle()
+	{
+		this.settings.spellcheck_on = !this.settings.spellcheck_on
+		this.render()
+		if(this.settings.spellcheck_on) 
+		{
+			this.editor.textarea.focus()
+		}
+	}
+
+	/**
 	 * Duplicate the line on which the cursor currently rests. If there's a range selected, nothing occurs.
 	 */
 	duplicate_line()
@@ -374,6 +396,7 @@ class RegEditor extends Region
 	{
 		this.settings.page_id_loaded_for = undefined
 		this.settings.local_code = this.swyd.dh_page_content.get_src()
+		this.settings.spellcheck_on = false
 	}
 	
 	_on_render()
@@ -398,6 +421,10 @@ class RegEditor extends Region
 			this.editor.textarea.setAttribute('cols', this.settings.ruler_offset)
 			this.editor.textarea.classList.add('wrap-bound')
 		}
+
+		// Spellcheck
+		this.btn_spellcheck.class_set('collapsed', !this.settings.spellcheck_on)
+		this.editor.textarea.setAttribute('spellcheck', this.settings.spellcheck_on)
 	}
 
 }

@@ -25,6 +25,7 @@ __author__ = "Josh Reed"
 from cognatio.web.schemas.page import PageSchema
 from cognatio.web.schemas.user import UserSchema
 from cognatio.web.schemas.edge import EdgeSchema
+from cognatio.web.schemas.friend import FriendSchema
 from cognatio.web.flask.app import rest_exposer
 
 # Other libs
@@ -36,9 +37,11 @@ from restlink import API
 schema_page = PageSchema()
 schema_user = UserSchema(exclude=['passhash'])
 schema_edge = EdgeSchema()
+schema_friend= FriendSchema()
 
 # Register schema's with restlink under one single api.
 api = API("api", "v1", "Cognatio")
 rest_exposer.register_schema(api, schema_page)
 rest_exposer.register_schema(api, schema_user)
 rest_exposer.register_schema(api, schema_edge)
+rest_exposer.register_schema(api, schema_friend)

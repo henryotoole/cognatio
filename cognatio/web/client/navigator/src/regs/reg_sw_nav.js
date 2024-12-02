@@ -9,6 +9,7 @@ import {
 	DHPageContent,
 	DHPageResource,
 	DHEdge,
+	DHFriend,
 	RegCoords,
 	RegNewPage,
 	RegControls,
@@ -321,11 +322,13 @@ class RegSWNav extends RegionSwitchyard
 				return prom.finally(()=>{throw("Interrupt then chain.")})
 			}
 			throw(e) // Shorthand for 'else'
-		}).then(()=>
+		})
+		.then(()=>
 		{
 			this.dh_page.track_ids([id])
 			return this.dh_page.pull()
-		}).then(()=>
+		})
+		.then(()=>
 		{
 			// Mass-change settings to new page, now that we certainly have access to it and know about it.
 			this.settings.page_id = id
@@ -333,31 +336,38 @@ class RegSWNav extends RegionSwitchyard
 			this.dh_page_content.track(id, page.page_url)
 			this.reg_coords.settings.local_page_name = page.name
 
-		}).then(()=>
+		})
+		.then(()=>
 		{
 			return this.dh_page_resource.pull()
-		}).then(()=>
+		})
+		.then(()=>
 		{
 			// Prep the app-side source for selected page content. Cache works if ID has not changed.
 			return this.dh_page_content.pull()
-		}).then(()=>
+		})
+		.then(()=>
 		{
 			// TODO replace this with ripple load for selected page.
 			return this._load_entire_graph()
-		}).then(()=>
+		})
+		.then(()=>
 		{
 			// Load relevant edges for this page.
 			return this.dh_edge.track_all_for_page(id)
-		}).then(()=>
+		})
+		.then(()=>
 		{
 			return this.dh_edge.pull()
-		}).then(()=>{
+		})
+		.then(()=>{
 			// Only set hash if already set to something, otherwise can never back out past no-hash because
 			// a hash is always added.
 			if(window.location.hash != "") window.location.hash = page.name
 			this.settings.page_loading = false
 			this.render()
-		}).catch((e)=>
+		})
+		.catch((e)=>
 		{
 			console.error(e)
 			this.settings.page_loading = false
@@ -490,6 +500,7 @@ class RegSWNav extends RegionSwitchyard
 		this.dh_page_content = new DHPageContent(this)
 		this.dh_page_resource = new DHPageResource(this)
 		this.dh_edge = new DHEdge()
+		this.dh_friend = new DHFriend()
 		this.dh_user = new DHREST("/api/v1/user", false, false)
 
 		this.datahandler_subscribe([this.dh_page, this.dh_page_content, this.dh_page_resource])

@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+## [1.0.4] - 2024-12-02
+
+### Added
+
+- An actual interface for adding / removing 'friends' with read access to a page.
+- Spellcheck for editor.
+
+### Fixed
+
+- Punchcard max-width for mobile.
+
 ## [1.0.3] - 2024-11-23
 
 ### Added
