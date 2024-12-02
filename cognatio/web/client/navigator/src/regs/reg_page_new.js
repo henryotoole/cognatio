@@ -4,7 +4,7 @@
  */
 
 import {Region, Fabricator, RHElement, RegInInput, RegInCheckbox, RegInSelect, ErrorREST} from "../lib/regional.js"
-import {RegSWNav, PageAccessMode, RegInCBTypeset} from "../nav.js"
+import {RegSWNav, PageAccessMode, RegInCBTypeset, RegPageFriends} from "../nav.js"
 
 class RegNewPage extends Region
 {
@@ -13,6 +13,7 @@ class RegNewPage extends Region
 		let css = /* css */`
 			[rfm_reg="RegNewPage"] {
 				& .cont-main {
+					max-width: 100vw;
 					width: 40em;
 					display: flex;
 					flex-direction: column;

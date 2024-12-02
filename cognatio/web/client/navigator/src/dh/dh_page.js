@@ -4,7 +4,7 @@
  */
 
 import { DHREST } from "../lib/regional.js";
-import { CompPage, DHEdge } from "../nav.js";
+import { CompPage, DHEdge, CompUser } from "../nav.js";
 
 const PageAccessMode =
 {
@@ -52,7 +52,6 @@ class DHPage extends DHREST
 	{
 		return new CompPage(id, this)
 	}
-
 
 	/**
 	 * TODO finish this method. It will be quite complex, but very efficient. 

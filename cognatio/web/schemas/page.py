@@ -6,7 +6,7 @@ __author__ = "Josh Reed"
 from cognatio import env, cognatio_config
 from cognatio.core.models import Page
 from cognatio.core.enums import PageAccessMode
-from cognatio.web.flask.app import rest_exposer
+from cognatio.web.flask import rest_exposer
 
 # Other libs
 from marshmallow import fields, post_load, validate
@@ -75,7 +75,7 @@ class PageSchema(SchemaDB):
 			page.name = name
 
 		# Default behavior for remaining keys.
-		return super().update(id, data)
+		return super()._update(id, data)
 	
 	def _delete(self, id):
 		"""Delete a Page record. This will also delete the page file from filesystem...

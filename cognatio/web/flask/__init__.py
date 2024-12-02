@@ -2,7 +2,7 @@
 """
 __author__ = "Josh Reed"
 
-from cognatio.web.flask.app import db_flask, login_manager, dispatcher
+from cognatio.web.flask.app import db_flask, login_manager, dispatcher, rest_exposer
 from flask.wrappers import Response
 from flask import render_template_string
 
