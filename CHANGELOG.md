@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+## [1.0.5] - 2024-12-09
+
+### Fixed
+
+- Uploaded files having undefined name until page refresh.
+
 ## [1.0.4] - 2024-12-02
 
 ### Added
