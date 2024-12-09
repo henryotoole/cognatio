@@ -9460,7 +9460,7 @@ var DHPageResource = class extends DHREST {
   /** @type {Number} The max size of a payload that will be sent in a single request. */
   _max_payload_size;
   constructor() {
-    super("/api/v1/page", false, false);
+    super("/api/v1/page");
     this.current_page_id = void 0;
     this._max_payload_size = 512 * 1024;
   }

@@ -30,7 +30,7 @@ class DHPageResource extends DHREST
 	constructor()
 	{
 		// This forms a 'base' URL which must be extended for use.
-		super('/api/v1/page', false, false)
+		super('/api/v1/page')
 
 		this.current_page_id = undefined
 		this._max_payload_size = 512*1024 // 0.5MB
