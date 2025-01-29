@@ -205,6 +205,8 @@ class RegEditor extends Region
 		local_code: undefined,
 		/** @description Ruler offset in characters, or undefined to disable. Sets a hard word wrap */
 		ruler_offset: undefined,
+		/** @description Whether or not spellcheck is on. */
+		spellcheck_on: false,
 	}
 
 	/** @type {RegSWNav} Reference to the switchyard region. */
@@ -344,6 +346,7 @@ class RegEditor extends Region
 		{
 			this.editor.textarea.focus()
 		}
+		window.localStorage.setItem('reg_editor.spellcheck_on', JSON.stringify(this.settings.spellcheck_on))
 	}
 
 	/**
@@ -389,6 +392,7 @@ class RegEditor extends Region
 		{
 			this.settings.ruler_offset = n_chars
 		}
+		window.localStorage.setItem('reg_editor.ruler_offset', JSON.stringify(this.settings.ruler_offset))
 		this.render()
 	}
 
@@ -397,6 +401,18 @@ class RegEditor extends Region
 		this.settings.page_id_loaded_for = undefined
 		this.settings.local_code = this.swyd.dh_page_content.get_src()
 		this.settings.spellcheck_on = false
+
+		// If there are certain settings in cookies, use them.
+		let apply_if_exist = (name)=>
+		{
+			try {
+				let val = window.localStorage.getItem('reg_editor.' + name)
+				if(val != undefined) this.settings[name] = JSON.parse(val)
+			}
+			catch (e) {}
+		}
+		apply_if_exist('spellcheck_on')
+		apply_if_exist('ruler_offset')
 	}
 	
 	_on_render()
