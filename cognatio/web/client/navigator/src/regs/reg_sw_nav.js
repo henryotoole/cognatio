@@ -158,6 +158,8 @@ class RegSWNav extends RegionSwitchyard
 		presets: {},
 		/** @description The presets that are available when creating a new page. keys to rel url's. */
 		preset_urls: {},
+		/** @description A memory space used by gesture tracking. */
+		gesture: {},
 	}
 
 	/** @type {RHElement} */
@@ -552,6 +554,8 @@ class RegSWNav extends RegionSwitchyard
 	{
 		// Kick off the initial page load.
 		this.page_set(this.settings.page_id)
+		// Bind page redirect gestures
+		this._bind_redirect_handlers()
 
 		// Kick another lazy-load event for the available presets.
 		this.dispatch.call_server_function("page_get_presets").then((presets)=>
@@ -642,6 +646,120 @@ class RegSWNav extends RegionSwitchyard
 		return this.dh_page.comp_get(this.settings.page_id)
 	}
 
+	/**
+	 * Bind key event and gesture handlers that take us back to the non-navigator version of this page.
+	 */
+	_bind_redirect_handlers()
+	{
+		/**
+		 * Called when the gesture is started with three touches.
+		 * @param {TouchEvent} e 
+		 */
+		let gesture_start = (e)=>
+		{
+			this.settings.gesture = {
+				'touches_start': {},
+				'touches_last': {}
+			}
+			for(let i = 0; i < e.touches.length; i++)
+			{
+				let ident = e.touches[i].identifier
+				this.settings.gesture.touches_start[e.touches[i].identifier] = {
+					x: e.touches[i].clientX,
+					y: e.touches[i].clientY,
+				}
+				this.settings.gesture.touches_start[ident] = {
+					x: e.touches[i].clientX,
+					y: e.touches[i].clientY,
+				}
+			}
+		}
+
+		/**
+		 * Called every time the touch list updates. Only called if there are exaclty three touches.
+		 * @param {Touchlist} touches 
+		 */
+		let gesture_update = (touches)=>
+		{
+			// Update coords
+			for(let i = 0; i < touches.length; i++)
+			{
+				this.settings.gesture.touches_last[touches[i].identifier] = {
+					x: touches[i].clientX,
+					y: touches[i].clientY,
+				}
+			}
+		}
+
+		let gesture_end = ()=>
+		{
+			if(this.settings.gesture != undefined)
+			{
+				// Check to see if gesture was performed.
+				let gesture_drags = 0
+				Object.entries(this.settings.gesture.touches_start).forEach(([ident, coords_start])=>
+				{
+					let coords_last = this.settings.gesture.touches_last[ident]
+					let pctx_travelled = (coords_last.x - coords_start.x) / window.innerWidth
+					let pcty_travelled = (coords_last.y - coords_start.y) / window.innerWidth
+
+					if(pctx_travelled > 0.5 && pcty_travelled < 0.5)
+					{
+						gesture_drags += 1
+					}
+				})
+				this.settings.gesture = undefined
+
+				if(gesture_drags == 3)
+				{
+					this._page_redirect()
+				}
+			}
+		}
+
+		document.addEventListener('touchmove', (e)=>
+		{
+			if(e.touches.length != 3)
+			{
+				gesture_end()
+				return
+			}
+
+			if(this.settings.gesture == undefined)
+			{
+				gesture_start(e)
+			}
+			else
+			{
+				gesture_update(e.touches)
+			}
+		})
+
+		document.addEventListener('touchend', (e)=>
+		{
+			gesture_end()
+		})
+
+		document.addEventListener('keydown', (e)=>
+		{
+			if(e.ctrlKey && e.altKey && e.code == "KeyC")
+			{
+				this._page_redirect()
+			}
+		})
+	}
+
+	/**
+	 * Redirect to the simple webpage version of whatever page the navigator is pointed at.
+	 */
+	_page_redirect = ()=>
+	{
+		// Infer page from location
+		if(this.page_active == undefined) return
+
+		window.location = "/page/" + this.page_active.name
+	}
+
 	_on_settings_refresh()
 	{
 		this.settings.page_id = undefined
@@ -650,6 +768,7 @@ class RegSWNav extends RegionSwitchyard
 		this.settings.map_enabled = false
 		this.settings.editor_width = 0.5
 		this.settings.page_loading = false
+		this.settings.gesture = undefined
 	}
 
 	_on_render()
