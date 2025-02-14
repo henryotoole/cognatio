@@ -55,4 +55,25 @@ const url_to_page_name = (url_string)=>
 	return fname
 }
 
-export { url_is_internal, url_to_page_name }
+/**
+ * Sanitize this filename for uploads.
+ */
+const sanitize_filename = (filename)=>
+{
+	let reg = /^[a-zA-Z0-9_.]*$/
+	let out = ""
+	for(let i = 0; i < filename.length; i++)
+	{
+		if(filename[i] == ' ' || filename[i] == '-')
+		{
+			out += '_'
+		}
+		else if(filename[i].search(reg) != -1)
+		{
+			out += filename[i]
+		}
+	}
+	return out
+}
+
+export { url_is_internal, url_to_page_name, sanitize_filename }

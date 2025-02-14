@@ -38,12 +38,13 @@ def get_logged_in_user_id():
 	return "Logged out as user", 200
 
 @dispatch_callable_function(dispatcher)
-def login(email, password):
+def login(email, password, stay_logged_in):
 	"""Attempt to log in with provided credentials.
 
 	Args:
 		email (str): The provided email.
 		password (str): The provided password.
+		stay_logged_in (bool): Whether to stay logged in.
 
 	Raises:
 		DispatchResponseError if the user is unknown or password is bad.
@@ -56,7 +57,7 @@ def login(email, password):
 		return DispatchResponseError(g.__dispatch__session_id, 404, f"User for {email} does not exist.")
 	if not user.pw_validate(password):
 		return DispatchResponseError(g.__dispatch__session_id, 404, f"Bad password.")
-	login_user(user)
+	login_user(user, remember=stay_logged_in)
 	return user.id
 
 @dispatch_callable_function(dispatcher)

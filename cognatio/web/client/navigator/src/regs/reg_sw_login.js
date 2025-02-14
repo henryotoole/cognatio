@@ -43,6 +43,16 @@ class RegSWLogin extends RegionSwitchyard
 					align-items: flex-start;
 					justify-content: center;
 				}
+
+				& .pastebox {
+					width: 20vw;
+					height: 20vw;
+					position: absolute;
+					top: 10vw;
+					left: 10vw;
+					z-index: 100000;
+					background-color: white;
+				}
 			}
 		`
 		let css_body = /* css */ `
@@ -50,6 +60,7 @@ class RegSWLogin extends RegionSwitchyard
 		`
 		let html = /* html */`
 		<div rfm_member='cont_master' class='cont-master'>
+			<div rfm_member='pastebox' class='pastebox'>pastebox</div>
 		</div>
 		`
 		return new Fabricator(html).add_css_rule(css).add_css_rule(css_body)
@@ -79,6 +90,24 @@ class RegSWLogin extends RegionSwitchyard
 	{
 		this.reg_login.activate()
 		this.reg_loading.fade_out()
+		this.paste_experiment()
+	}
+
+	paste_experiment()
+	{
+
+		this.pastebox.addEventListener('paste', (e)=>
+		{
+			e.preventDefault();
+			console.log("Caught the paste!")
+
+			console.log(e.clipboardData.getData('text'))
+			let files = e.clipboardData.files
+			for(let i = 0; i < files.length; i++)
+			{
+				console.log(files[i])
+			}
+		})
 	}
 
 	on_load_failed(e)

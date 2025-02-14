@@ -13,7 +13,7 @@ from dispatch_flask import DispatcherFlask
 from restlink import ExposerFlask
 
 # Base python
-
+import datetime
 
 # Instantiate the plugins that need to be importable from elsewhere.
 db_flask = SQLAlchemy()
@@ -72,3 +72,7 @@ def configure_app(app: Flask):
 	# CSRF: This absolves the need for CSRF tokens, which are especially inconvenient for the Cognatio project
 	# as I don't want to have to template every single web page that is served.
 	app.config['SESSION_COOKIE_SAMESITE'] = "Strict"
+
+	# Set flask_login cookie settings (https://flask-login.readthedocs.io/en/latest/)
+	app.config['REMEMBER_COOKIE_DURATION'] = datetime.timedelta(days=7)
+	app.config['REMEMBER_COOKIE_REFRESH_EACH_REQUEST'] = True

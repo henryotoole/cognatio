@@ -21,6 +21,7 @@ class CognatioConfig(TypedDict):
 	REDIS_DB_INDEX: int
 	REDIS_DB_INDEX_TEST: int
 	FLASK_SECRET_KEY: str
+	REMEMBER_COOKIE_DOMAIN: int
 	WEB_HOSTNAME: str
 	GATEWAY_PAGE_NAME: str
 	OWNER_USER_ID: int

@@ -217,7 +217,7 @@ class RegSWNav extends RegionSwitchyard
 		if(!url_is_internal(url))
 		{
 			let err = new Error("Currently navigator does not support non-internal URL's.")
-			err.non_internal = true
+			err._non_internal = true
 			throw err
 		}
 		let page_name = url_to_page_name(url)
