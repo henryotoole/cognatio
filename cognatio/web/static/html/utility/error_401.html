@@ -17,7 +17,7 @@
 	<script>
 		let btn = document.getElementById('btn'),
 			loc = new URL(window.location),
-			next = loc.searchParams.get('next')
+			next = loc.pathname
 
 		if(!next) next = "/nav"
 

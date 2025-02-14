@@ -27,7 +27,7 @@ class RegLogin extends Region
 				}
 				& .constellation {
 					top: 0; left: 0;
-					width: 100%; height: 100%;
+					width: 100vw; height: 100vh;
 				}
 				/** Outer layer exists so that messenger can be defined by gauge width / height but not bound
 				by overflow hidden. */
@@ -348,6 +348,18 @@ class RegLogin extends Region
 	}
 
 	/**
+	 * Set a callback function that's performed on login success. Sort of bad practice.
+	 * 
+	 * This function will be called after login successfully sets the current user for the switchyard space.
+	 * 
+	 * @param {Function} cb callback function upon login success
+	 */
+	set_callback(cb)
+	{
+		this.settings.login_callback = cb
+	}
+
+	/**
 	 * Attempt to log in with current settings.
 	 */
 	login()
@@ -371,7 +383,10 @@ class RegLogin extends Region
 
 		this.swyd.dispatch.call_server_function('login', email, pw).then((id)=>
 		{
-			return this.swyd.set_user(id)
+			return this.swyd.set_user(id).then(()=>
+			{
+				if(this.settings.login_callback) this.settings.login_callback()
+			})
 		}).then(()=>
 		{
 			this.deactivate()
@@ -449,6 +464,7 @@ class RegLogin extends Region
 		this.settings.new_email = ""
 		this.settings.new_password = ""
 		this.settings.new_password2 = ""
+		this.settings.login_callback = undefined
 	}
 
 	_on_render()

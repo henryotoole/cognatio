@@ -157,8 +157,8 @@ server {
 	include /etc/nginx/snippets/ssl.conf;
 
 	# Set error pages
-	error_page 401 /s/html/utility/error_401.html?next=$request_uri;
-	error_page 403 /s/html/utility/error_403.html?next=$request_uri;
+	error_page 401 /s/html/utility/error_401.html;
+	error_page 403 /s/html/utility/error_403.html;
 	error_page 404 /s/html/utility/error_404.html;
 
 	# Connect all non-special routes to the flask server via gunicorn and a socket. 

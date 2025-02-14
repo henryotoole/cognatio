@@ -37,4 +37,5 @@ export {DHFriend} from "./dh/dh_friend.js"
 
 export {Vector2D} from "./etc/vector.js"
 export {Network} from "./etc/network.js"
+export {LineMap} from "./etc/line_map.js"
 export {url_is_internal, url_to_page_name} from "./etc/paths.js"

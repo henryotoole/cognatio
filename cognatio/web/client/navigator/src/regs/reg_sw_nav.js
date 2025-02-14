@@ -303,6 +303,8 @@ class RegSWNav extends RegionSwitchyard
 				let prom
 				if(this.settings.user_id == undefined)
 				{
+					// Prevents re-loading of this very twochoice when the error is thrown.
+					prevent_rollback = true
 					prom = this.reg_two_choice.present_choice(
 						"Page Access Not Authorized",
 						"This page requires authorization to view, and you are not logged into an account. " +
@@ -312,6 +314,13 @@ class RegSWNav extends RegionSwitchyard
 					).then(()=>
 					{
 						this.reg_login.activate()
+						this.reg_login.set_callback(()=>
+						{
+							this.page_set(id, prevent_rollback)
+						})
+					}).catch(()=>
+					{
+						this.page_set(prev_id, true)
 					})
 				}
 				else
@@ -367,6 +376,10 @@ class RegSWNav extends RegionSwitchyard
 			// a hash is always added.
 			if(window.location.hash != "") window.location.hash = page.name
 			this.settings.page_loading = false
+			// Cleanup and deactivate any settings overlays.
+			this.reg_page_alter.deactivate()
+			this.reg_page_new.deactivate()
+			this.reg_resource_new.deactivate()
 			this.render()
 		})
 		.catch((e)=>

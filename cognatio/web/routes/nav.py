@@ -12,7 +12,7 @@ from cognatio.web.routes.misc import _page_auth
 from cognatio.util.paths import get_page_name_from_url
 
 # Other libs
-from flask import current_app, send_from_directory, redirect, g
+from flask import current_app, send_from_directory, redirect, g, send_file
 from flask_login import login_required, current_user
 from dispatch_flask import dispatch_callable_function, DispatchResponseError
 
@@ -140,9 +140,10 @@ def dev_page(path):
 	msg, code = _page_auth(url)
 
 	if(code != 200):
-		# Mirror (some of) the Nginx pages
+		# Mirror (some of) the Nginx pages' behaviors
 		if(code == 401 or code==403):
-			return redirect(f'/s/html/utility/error_{code}.html?next={url}')
+			# NGINX won't redirect, it just serves the error HTML under the original URL.
+			return send_file(os.path.join(env.fpath_static, 'html', 'utility', f'error_{code}.html'))
 		else:
 			return msg, code
 

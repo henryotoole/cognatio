@@ -409,7 +409,7 @@ class RegEditor extends Region
 				let val = window.localStorage.getItem('reg_editor.' + name)
 				if(val != undefined) this.settings[name] = JSON.parse(val)
 			}
-			catch (e) {}
+			catch (e) {} 
 		}
 		apply_if_exist('spellcheck_on')
 		apply_if_exist('ruler_offset')
