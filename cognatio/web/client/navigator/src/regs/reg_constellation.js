@@ -87,10 +87,12 @@ class RegConstellation extends Region
 				& .frame-border-dashed {
 					border-color: var(--metal-light);
 					border-style: dashed;
+					opacity: 70%;
 				}
 				& .frame-border-red {
 					border-color: var(--red);
 					border-style: solid;
+					opacity: 70%;
 				}
 				& .star-major {
 					position: absolute;
@@ -142,7 +144,7 @@ class RegConstellation extends Region
 						<div rfm_member='frame_offset' class='constellation rotate-slower' style='left: 35vw;'></div>
 					</div>
 					<div rfm_member='frame_center' class='constellation'></div>
-					<div rfm_member='const_center' class='constellation rotate-slow'></div>
+					<div rfm_member='const_center' class='constellation'></div>
 				</div>
 			</div>
 		`
@@ -206,6 +208,12 @@ class RegConstellation extends Region
 		//	}
 		//}
 		//redraw()
+
+		// Pretty critical; this ensures that the grids are rendered with the correct dimensions.
+		this.render_checksum_add_tracked('cont_dims', ()=>
+		{
+			return JSON.stringify(this.cont_outer.getBoundingClientRect())
+		})
 	}
 
 	_on_render()
@@ -215,8 +223,9 @@ class RegConstellation extends Region
 		// handle that automatically.
 
 		let bb = this.cont_outer.getBoundingClientRect()
+		
 		let polar_dotted = this._draw_polar_frame(
-			72, 100, 'frame-border-dashed', this.cont_outer.getBoundingClientRect()
+			72, 100, 'frame-border-dashed', bb
 		)
 		let polar_red = this._draw_polar_frame(
 			72, 100, 'frame-border-red', {width: bb.width*2, height: bb.height}

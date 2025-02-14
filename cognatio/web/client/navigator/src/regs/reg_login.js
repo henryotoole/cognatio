@@ -158,6 +158,7 @@ class RegLogin extends Region
 					color: white;
 				}
 				& .messenger {
+					transition: 1s;
 					position: absolute;
 					top: calc(50% - 2em); left: 4%;
 					height: 4em; width: 80%;
@@ -176,6 +177,40 @@ class RegLogin extends Region
 
 					padding: 0.5em;
 				}
+				& .remember-me-frame {
+					transition: 0.5s;
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					width: 0; height: 0;
+
+					transform: rotate(-30deg);
+				}
+				& .remember-me {
+					transition: 0.5s;
+
+					display: flex;
+					position: absolute;
+					top: -1em; left: 0em;
+					height: 2em;
+					width: 11em;
+
+					justify-content: flex-end;
+					align-items: center;
+					border: 2px solid var(--brass);
+					background-color: var(--brass-lightest);
+					border-radius: 0.5em;
+					padding-right: 0.25em;
+					
+					color: var(--brass-light);
+					font-family: "IBMPlexMono";
+
+					cursor: pointer;
+				}
+				& .remember-me:hover {
+					text-decoration: underline;
+					left: 0.5em;
+				}
 			}
 		`
 		let html = /* html */`
@@ -184,6 +219,9 @@ class RegLogin extends Region
 			<div class='gauge-box'>
 				<div rfm_member='messenger' class='messenger'>
 					<div rfm_member='messenger_text' class='messenger-text'></div>
+				</div>
+				<div rfm_member='rm_frame' class='remember-me-frame'>
+					<div rfm_member='btn_rm' class='remember-me'>&gt;S</div>
 				</div>
 				<div class='gauge'>
 					<div rfm_member='cont_rotate' class='cont-rotate'>
@@ -203,8 +241,8 @@ class RegLogin extends Region
 										</div>
 									</div>
 									<div class='row'>
-										<button rfm_member='btn_new' class='button'>Create</button>
 										<button rfm_member='btn_to_login' class='button'>Back</button>
+										<button rfm_member='btn_new' class='button'>Create</button>
 									</div>
 								</machine>
 								<div class='bolt-lane' style='transform: rotate(0deg)'><bolt></bolt></div>
@@ -237,8 +275,8 @@ class RegLogin extends Region
 										</div>
 									</form>
 									<div class='row'>
-										<button rfm_member='btn_login' class='button'>Login</button>
 										<button rfm_member='btn_to_signup' class='button'>New</button>
+										<button rfm_member='btn_login' class='button'>Login</button>
 									</div>
 								</machine>
 								<div class='bolt-lane' style='transform: rotate(0deg)'><bolt></bolt></div>
@@ -285,6 +323,10 @@ class RegLogin extends Region
 	messenger
 	/** @type {RHElement} */
 	messenger_text
+	/** @type {RHElement} */
+	rm_frame
+	/** @type {RHElement} */
+	btn_rm
 
 	_create_subregions()
 	{
@@ -345,6 +387,36 @@ class RegLogin extends Region
 		this.regin_new_email.member_get("input").addEventListener('keydown', enter_listener.bind(this, this.create))
 		this.regin_new_password.member_get("input").addEventListener('keydown', enter_listener.bind(this, this.create))
 		this.regin_new_password2.member_get("input").addEventListener('keydown', enter_listener.bind(this, this.create))
+
+		this.btn_rm.addEventListener('click', ()=>
+		{
+			this.settings.stay_logged_in = !this.settings.stay_logged_in
+
+			let message = this.settings.stay_logged_in ?
+				"You will stay logged in after the browser closes." :
+				"You will be logged out when the browser is closed."
+			
+			this.settings.message = message
+			if(this.settings.last_message_timeout_id) window.clearTimeout(this.settings.last_message_timeout_id)
+			this.settings.last_message_timeout_id = window.setTimeout(()=>
+			{
+				this.settings.message = ""
+				this.render()
+			}, 3000)
+			this.render()
+		})
+	}
+
+	/**
+	 * Set a callback function that's performed on login success. Sort of bad practice.
+	 * 
+	 * This function will be called after login successfully sets the current user for the switchyard space.
+	 * 
+	 * @param {Function} cb callback function upon login success
+	 */
+	set_callback(cb)
+	{
+		this.settings.login_callback = cb
 	}
 
 	/**
@@ -355,6 +427,7 @@ class RegLogin extends Region
 		this.settings.message = ""
 		let email = this.settings.login_email
 		let pw = this.settings.login_password
+		let stay_logged_in = this.settings.stay_logged_in
 
 		if(!validate_email(email))
 		{
@@ -369,9 +442,12 @@ class RegLogin extends Region
 			return
 		}
 
-		this.swyd.dispatch.call_server_function('login', email, pw).then((id)=>
+		this.swyd.dispatch.call_server_function('login', email, pw, stay_logged_in).then((id)=>
 		{
-			return this.swyd.set_user(id)
+			return this.swyd.set_user(id).then(()=>
+			{
+				if(this.settings.login_callback) this.settings.login_callback()
+			})
 		}).then(()=>
 		{
 			this.deactivate()
@@ -449,6 +525,9 @@ class RegLogin extends Region
 		this.settings.new_email = ""
 		this.settings.new_password = ""
 		this.settings.new_password2 = ""
+		this.settings.login_callback = undefined
+		this.settings.stay_logged_in = false
+		this.settings.last_message_timeout_id = undefined
 	}
 
 	_on_render()
@@ -459,6 +538,9 @@ class RegLogin extends Region
 		// Messenger
 		this.messenger.style.left = this.settings.message.length > 0 ? '-80%' : ''
 		this.messenger_text.text(this.settings.message)
+
+		// Stay logged in
+		this.rm_frame.style.transform = this.settings.stay_logged_in ? 'rotate(0deg)' : 'rotate(-30deg)'
 	}
 }
 

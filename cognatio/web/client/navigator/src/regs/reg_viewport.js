@@ -81,6 +81,10 @@ class RegViewport extends Region
 					this.swyd.render()
 				})
 			}
+			else if(e._non_internal)
+			{
+				window.open(target_url, '_blank')
+			}
 		})
 	}
 

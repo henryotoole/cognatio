@@ -4,7 +4,7 @@
  */
 
 import {Region, Fabricator, RHElement, RegInInput} from "../lib/regional.js"
-import {RegSWNav, RegNewPage} from "../nav.js"
+import {RegSWNav, RegNewPage, sanitize_filename} from "../nav.js"
 
 class RegResourceNew extends Region
 {
@@ -137,8 +137,17 @@ class RegResourceNew extends Region
 		this.file_input.addEventListener('change', ()=>
 		{
 			this.settings.file = this.file_input.files[0]
-			this.settings.filename = this.settings.file.name
+			this.settings.filename = sanitize_filename(this.settings.file.name)
 			this.render()
+		})
+		this.reg.addEventListener('paste', (e)=>
+		{
+			if(e.clipboardData.files.length > 0)
+			{
+				this.settings.file = e.clipboardData.files[0]
+				this.settings.filename = sanitize_filename(this.settings.file.name)
+				this.render()
+			}
 		})
 	}
 
@@ -146,6 +155,14 @@ class RegResourceNew extends Region
 	{
 		this.close.addEventListener('click', ()=>{this.deactivate()})
 		this.send.addEventListener('click', ()=>{this.upload_file()})
+		// Must set the tabindex so that .focus() actually works. Focus is needed for pasting.
+		// Must set the tabindex so that .focus() actually works. Focus is needed for pasting.
+		this.reg.setAttribute('tabindex', "0")
+	}
+
+	_on_paste()
+	{
+		// For this to fire, 
 	}
 
 	/**
@@ -248,6 +265,13 @@ class RegResourceNew extends Region
 			this.prog_bar.text(txt)
 			this.prog_pct.text(Math.round(this.settings.progress * 100))
 		}
+	}
+
+	_on_activate_post()
+	{
+		// This ensures that paste events are captured. Should perhaps be base regional functionality for
+		// activation, but focus only applies to a small subset of elements so perhaps not.
+		this.reg.focus()
 	}
 }
 
