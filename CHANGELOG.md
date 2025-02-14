@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+## [1.0.6] - 2025-02-14
+
+### Added
+
+- Transfer forwards and backwards to the navigator with hotkeys. 
+- Transfer method for mobile. 
+- Cookies that remember editor settings like wrap and SC. 
+- Clicking external link while in nav opens in new tab. 
+- Cookies that remember login. 
+- Paste-images into uploader. 
+
+### Fixed
+
+- Should close overlays when switching pages 
+- Logging in doesn't preserve target link 
+- Graphics are broken in login 
+- Width of alter / new / upload on mobile. 
+
 ## [1.0.5] - 2024-12-09
 
 ### Fixed

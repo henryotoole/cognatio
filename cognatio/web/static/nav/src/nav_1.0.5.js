@@ -4897,7 +4897,9 @@ var RegSWNav = class extends RegionSwitchyard {
     /** @description The presets that are available when creating a new page. keys to names. */
     presets: {},
     /** @description The presets that are available when creating a new page. keys to rel url's. */
-    preset_urls: {}
+    preset_urls: {},
+    /** @description A memory space used by gesture tracking. */
+    gesture: {}
   };
   /** @type {RHElement} */
   cont_scroll;
@@ -4950,7 +4952,7 @@ var RegSWNav = class extends RegionSwitchyard {
   async page_nav_url(url) {
     if (!url_is_internal(url)) {
       let err = new Error("Currently navigator does not support non-internal URL's.");
-      err.non_internal = true;
+      err._non_internal = true;
       throw err;
     }
     let page_name = url_to_page_name(url);
@@ -5014,6 +5016,7 @@ var RegSWNav = class extends RegionSwitchyard {
       if (e instanceof ErrorREST && e.data.http_code == 403) {
         let prom;
         if (this.settings.user_id == void 0) {
+          prevent_rollback = true;
           prom = this.reg_two_choice.present_choice(
             "Page Access Not Authorized",
             "This page requires authorization to view, and you are not logged into an account. Would you like to sign in?",
@@ -5021,6 +5024,11 @@ var RegSWNav = class extends RegionSwitchyard {
             "Log In"
           ).then(() => {
             this.reg_login.activate();
+            this.reg_login.set_callback(() => {
+              this.page_set(id, prevent_rollback);
+            });
+          }).catch(() => {
+            this.page_set(prev_id, true);
           });
         } else {
           prom = this.reg_one_choice.present_message(
@@ -5054,6 +5062,9 @@ var RegSWNav = class extends RegionSwitchyard {
     }).then(() => {
       if (window.location.hash != "") window.location.hash = page.name;
       this.settings.page_loading = false;
+      this.reg_page_alter.deactivate();
+      this.reg_page_new.deactivate();
+      this.reg_resource_new.deactivate();
       this.render();
     }).catch((e) => {
       console.error(e);
@@ -5192,6 +5203,7 @@ var RegSWNav = class extends RegionSwitchyard {
   }
   on_load_complete() {
     this.page_set(this.settings.page_id);
+    this._bind_redirect_handlers();
     this.dispatch.call_server_function("page_get_presets").then((presets) => {
       this.settings.preset_urls = presets;
       this.settings.presets = {};
@@ -5256,6 +5268,79 @@ var RegSWNav = class extends RegionSwitchyard {
     if (this.settings.page_id == void 0) return void 0;
     return this.dh_page.comp_get(this.settings.page_id);
   }
+  /**
+   * Bind key event and gesture handlers that take us back to the non-navigator version of this page.
+   */
+  _bind_redirect_handlers() {
+    let gesture_start = /* @__PURE__ */ __name((e) => {
+      this.settings.gesture = {
+        "touches_start": {},
+        "touches_last": {}
+      };
+      for (let i = 0; i < e.touches.length; i++) {
+        let ident = e.touches[i].identifier;
+        this.settings.gesture.touches_start[e.touches[i].identifier] = {
+          x: e.touches[i].clientX,
+          y: e.touches[i].clientY
+        };
+        this.settings.gesture.touches_start[ident] = {
+          x: e.touches[i].clientX,
+          y: e.touches[i].clientY
+        };
+      }
+    }, "gesture_start");
+    let gesture_update = /* @__PURE__ */ __name((touches) => {
+      for (let i = 0; i < touches.length; i++) {
+        this.settings.gesture.touches_last[touches[i].identifier] = {
+          x: touches[i].clientX,
+          y: touches[i].clientY
+        };
+      }
+    }, "gesture_update");
+    let gesture_end = /* @__PURE__ */ __name(() => {
+      if (this.settings.gesture != void 0) {
+        let gesture_drags = 0;
+        Object.entries(this.settings.gesture.touches_start).forEach(([ident, coords_start]) => {
+          let coords_last = this.settings.gesture.touches_last[ident];
+          let pctx_travelled = (coords_last.x - coords_start.x) / window.innerWidth;
+          let pcty_travelled = (coords_last.y - coords_start.y) / window.innerWidth;
+          if (pctx_travelled > 0.5 && pcty_travelled < 0.5) {
+            gesture_drags += 1;
+          }
+        });
+        this.settings.gesture = void 0;
+        if (gesture_drags == 3) {
+          this._page_redirect();
+        }
+      }
+    }, "gesture_end");
+    document.addEventListener("touchmove", (e) => {
+      if (e.touches.length != 3) {
+        gesture_end();
+        return;
+      }
+      if (this.settings.gesture == void 0) {
+        gesture_start(e);
+      } else {
+        gesture_update(e.touches);
+      }
+    });
+    document.addEventListener("touchend", (e) => {
+      gesture_end();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.altKey && e.code == "KeyC") {
+        this._page_redirect();
+      }
+    });
+  }
+  /**
+   * Redirect to the simple webpage version of whatever page the navigator is pointed at.
+   */
+  _page_redirect = /* @__PURE__ */ __name(() => {
+    if (this.page_active == void 0) return;
+    window.location = "/page/" + this.page_active.name;
+  }, "_page_redirect");
   _on_settings_refresh() {
     this.settings.page_id = void 0;
     this.settings.show_editor = false;
@@ -5263,6 +5348,7 @@ var RegSWNav = class extends RegionSwitchyard {
     this.settings.map_enabled = false;
     this.settings.editor_width = 0.5;
     this.settings.page_loading = false;
+    this.settings.gesture = void 0;
   }
   _on_render() {
     let sep_pct;
@@ -6039,6 +6125,8 @@ var RegViewport = class extends Region {
           this.swyd.reg_page_new.settings.page_name = e2._page_name;
           this.swyd.render();
         });
+      } else if (e2._non_internal) {
+        window.open(target_url, "_blank");
       }
     });
   }
@@ -6271,7 +6359,9 @@ var RegEditor = class extends Region {
     /** @description Local copy of the 'code' for the currently loaded page. Will change as user edits. */
     local_code: void 0,
     /** @description Ruler offset in characters, or undefined to disable. Sets a hard word wrap */
-    ruler_offset: void 0
+    ruler_offset: void 0,
+    /** @description Whether or not spellcheck is on. */
+    spellcheck_on: false
   };
   /** @type {RegSWNav} Reference to the switchyard region. */
   swyd;
@@ -6389,6 +6479,7 @@ var RegEditor = class extends Region {
     if (this.settings.spellcheck_on) {
       this.editor.textarea.focus();
     }
+    window.localStorage.setItem("reg_editor.spellcheck_on", JSON.stringify(this.settings.spellcheck_on));
   }
   /**
    * Duplicate the line on which the cursor currently rests. If there's a range selected, nothing occurs.
@@ -6416,12 +6507,22 @@ var RegEditor = class extends Region {
     } else {
       this.settings.ruler_offset = n_chars;
     }
+    window.localStorage.setItem("reg_editor.ruler_offset", JSON.stringify(this.settings.ruler_offset));
     this.render();
   }
   _on_settings_refresh() {
     this.settings.page_id_loaded_for = void 0;
     this.settings.local_code = this.swyd.dh_page_content.get_src();
     this.settings.spellcheck_on = false;
+    let apply_if_exist = /* @__PURE__ */ __name((name) => {
+      try {
+        let val = window.localStorage.getItem("reg_editor." + name);
+        if (val != void 0) this.settings[name] = JSON.parse(val);
+      } catch (e) {
+      }
+    }, "apply_if_exist");
+    apply_if_exist("spellcheck_on");
+    apply_if_exist("ruler_offset");
   }
   _on_render() {
     if (this.swyd.dh_page_content.get_src() != void 0) {
@@ -8120,8 +8221,15 @@ var RegResourceNew = class extends Region {
     });
     this.file_input.addEventListener("change", () => {
       this.settings.file = this.file_input.files[0];
-      this.settings.filename = this.settings.file.name;
+      this.settings.filename = sanitize_filename(this.settings.file.name);
       this.render();
+    });
+    this.reg.addEventListener("paste", (e) => {
+      if (e.clipboardData.files.length > 0) {
+        this.settings.file = e.clipboardData.files[0];
+        this.settings.filename = sanitize_filename(this.settings.file.name);
+        this.render();
+      }
     });
   }
   _on_link_post() {
@@ -8131,6 +8239,9 @@ var RegResourceNew = class extends Region {
     this.send.addEventListener("click", () => {
       this.upload_file();
     });
+    this.reg.setAttribute("tabindex", "0");
+  }
+  _on_paste() {
   }
   /**
    * Upload a new file object as interpreted from the settings of this region.
@@ -8199,6 +8310,9 @@ var RegResourceNew = class extends Region {
       this.prog_bar.text(txt);
       this.prog_pct.text(Math.round(this.settings.progress * 100));
     }
+  }
+  _on_activate_post() {
+    this.reg.focus();
   }
 };
 
@@ -8323,10 +8437,12 @@ var RegConstellation = class extends Region {
 				& .frame-border-dashed {
 					border-color: var(--metal-light);
 					border-style: dashed;
+					opacity: 70%;
 				}
 				& .frame-border-red {
 					border-color: var(--red);
 					border-style: solid;
+					opacity: 70%;
 				}
 				& .star-major {
 					position: absolute;
@@ -8387,7 +8503,7 @@ var RegConstellation = class extends Region {
 						<div rfm_member='frame_offset' class='constellation rotate-slower' style='left: 35vw;'></div>
 					</div>
 					<div rfm_member='frame_center' class='constellation'></div>
-					<div rfm_member='const_center' class='constellation rotate-slow'></div>
+					<div rfm_member='const_center' class='constellation'></div>
 				</div>
 			</div>
 		`
@@ -8424,6 +8540,9 @@ var RegConstellation = class extends Region {
     this.network_offset = this.generate_constellation(6, 4);
     this.network.solve();
     this.network_offset.solve();
+    this.render_checksum_add_tracked("cont_dims", () => {
+      return JSON.stringify(this.cont_outer.getBoundingClientRect());
+    });
   }
   _on_render() {
     let bb = this.cont_outer.getBoundingClientRect();
@@ -8431,7 +8550,7 @@ var RegConstellation = class extends Region {
       72,
       100,
       "frame-border-dashed",
-      this.cont_outer.getBoundingClientRect()
+      bb
     );
     let polar_red = this._draw_polar_frame(
       72,
@@ -8872,6 +8991,7 @@ var RegLogin = class extends Region {
 					color: white;
 				}
 				& .messenger {
+					transition: 1s;
 					position: absolute;
 					top: calc(50% - 2em); left: 4%;
 					height: 4em; width: 80%;
@@ -8890,6 +9010,40 @@ var RegLogin = class extends Region {
 
 					padding: 0.5em;
 				}
+				& .remember-me-frame {
+					transition: 0.5s;
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					width: 0; height: 0;
+
+					transform: rotate(-30deg);
+				}
+				& .remember-me {
+					transition: 0.5s;
+
+					display: flex;
+					position: absolute;
+					top: -1em; left: 0em;
+					height: 2em;
+					width: 11em;
+
+					justify-content: flex-end;
+					align-items: center;
+					border: 2px solid var(--brass);
+					background-color: var(--brass-lightest);
+					border-radius: 0.5em;
+					padding-right: 0.25em;
+					
+					color: var(--brass-light);
+					font-family: "IBMPlexMono";
+
+					cursor: pointer;
+				}
+				& .remember-me:hover {
+					text-decoration: underline;
+					left: 0.5em;
+				}
 			}
 		`
     );
@@ -8901,6 +9055,9 @@ var RegLogin = class extends Region {
 			<div class='gauge-box'>
 				<div rfm_member='messenger' class='messenger'>
 					<div rfm_member='messenger_text' class='messenger-text'></div>
+				</div>
+				<div rfm_member='rm_frame' class='remember-me-frame'>
+					<div rfm_member='btn_rm' class='remember-me'>&gt;S</div>
 				</div>
 				<div class='gauge'>
 					<div rfm_member='cont_rotate' class='cont-rotate'>
@@ -8920,8 +9077,8 @@ var RegLogin = class extends Region {
 										</div>
 									</div>
 									<div class='row'>
-										<button rfm_member='btn_new' class='button'>Create</button>
 										<button rfm_member='btn_to_login' class='button'>Back</button>
+										<button rfm_member='btn_new' class='button'>Create</button>
 									</div>
 								</machine>
 								<div class='bolt-lane' style='transform: rotate(0deg)'><bolt></bolt></div>
@@ -8954,8 +9111,8 @@ var RegLogin = class extends Region {
 										</div>
 									</form>
 									<div class='row'>
-										<button rfm_member='btn_login' class='button'>Login</button>
 										<button rfm_member='btn_to_signup' class='button'>New</button>
+										<button rfm_member='btn_login' class='button'>Login</button>
 									</div>
 								</machine>
 								<div class='bolt-lane' style='transform: rotate(0deg)'><bolt></bolt></div>
@@ -9002,6 +9159,10 @@ var RegLogin = class extends Region {
   messenger;
   /** @type {RHElement} */
   messenger_text;
+  /** @type {RHElement} */
+  rm_frame;
+  /** @type {RHElement} */
+  btn_rm;
   _create_subregions() {
     this.reg_constellation = new RegConstellation({
       text_left: "COGNATIO",
@@ -9051,6 +9212,27 @@ var RegLogin = class extends Region {
     this.regin_new_email.member_get("input").addEventListener("keydown", enter_listener.bind(this, this.create));
     this.regin_new_password.member_get("input").addEventListener("keydown", enter_listener.bind(this, this.create));
     this.regin_new_password2.member_get("input").addEventListener("keydown", enter_listener.bind(this, this.create));
+    this.btn_rm.addEventListener("click", () => {
+      this.settings.stay_logged_in = !this.settings.stay_logged_in;
+      let message = this.settings.stay_logged_in ? "You will stay logged in after the browser closes." : "You will be logged out when the browser is closed.";
+      this.settings.message = message;
+      if (this.settings.last_message_timeout_id) window.clearTimeout(this.settings.last_message_timeout_id);
+      this.settings.last_message_timeout_id = window.setTimeout(() => {
+        this.settings.message = "";
+        this.render();
+      }, 3e3);
+      this.render();
+    });
+  }
+  /**
+   * Set a callback function that's performed on login success. Sort of bad practice.
+   * 
+   * This function will be called after login successfully sets the current user for the switchyard space.
+   * 
+   * @param {Function} cb callback function upon login success
+   */
+  set_callback(cb) {
+    this.settings.login_callback = cb;
   }
   /**
    * Attempt to log in with current settings.
@@ -9059,6 +9241,7 @@ var RegLogin = class extends Region {
     this.settings.message = "";
     let email = this.settings.login_email;
     let pw = this.settings.login_password;
+    let stay_logged_in = this.settings.stay_logged_in;
     if (!validate_email(email)) {
       this.settings.message = "Email is invalid.";
       this.render();
@@ -9069,8 +9252,10 @@ var RegLogin = class extends Region {
       this.render();
       return;
     }
-    this.swyd.dispatch.call_server_function("login", email, pw).then((id) => {
-      return this.swyd.set_user(id);
+    this.swyd.dispatch.call_server_function("login", email, pw, stay_logged_in).then((id) => {
+      return this.swyd.set_user(id).then(() => {
+        if (this.settings.login_callback) this.settings.login_callback();
+      });
     }).then(() => {
       this.deactivate();
     }).catch((e) => {
@@ -9129,11 +9314,15 @@ var RegLogin = class extends Region {
     this.settings.new_email = "";
     this.settings.new_password = "";
     this.settings.new_password2 = "";
+    this.settings.login_callback = void 0;
+    this.settings.stay_logged_in = false;
+    this.settings.last_message_timeout_id = void 0;
   }
   _on_render() {
     this.cont_rotate.style.transform = `rotate(${this.settings.interface * -90}deg)`;
     this.messenger.style.left = this.settings.message.length > 0 ? "-80%" : "";
     this.messenger_text.text(this.settings.message);
+    this.rm_frame.style.transform = this.settings.stay_logged_in ? "rotate(0deg)" : "rotate(-30deg)";
   }
 };
 
@@ -10317,6 +10506,39 @@ var Network = class _Network {
   }
 };
 
+// cognatio/web/client/navigator/src/etc/line_map.js
+var LineMap = class {
+  static {
+    __name(this, "LineMap");
+  }
+  constructor() {
+    this.text_raw = "";
+    this.lines = [
+      // Contains data of form:
+      // {text: actual characters, TODO}
+    ];
+  }
+  /**
+   * Convert bulk text into a list of lines that will contain no newline characters. Takes wordwrap
+   * into account.
+   * 
+   * @param {String} text Raw, bulk text containing newlines
+   * @param {Number} word_wrap_width The column width to wrap words at, or undefined for no word wrap.
+   */
+  text_laminate(text, word_wrap_width) {
+  }
+  /**
+   * @returns {Array.<String>} List of lines as simple String objects, sans metadata.
+   */
+  get lines_simple() {
+    let lines = [];
+    this.lines.forEach((line_data) => {
+      lines.push(line_data.text);
+    });
+    return lines;
+  }
+};
+
 // cognatio/web/client/navigator/src/etc/paths.js
 var url_is_internal = /* @__PURE__ */ __name((url_string) => {
   let url;
@@ -10341,6 +10563,18 @@ var url_to_page_name = /* @__PURE__ */ __name((url_string) => {
   if (fname.length == "") return void 0;
   return fname;
 }, "url_to_page_name");
+var sanitize_filename = /* @__PURE__ */ __name((filename) => {
+  let reg = /^[a-zA-Z0-9_.]*$/;
+  let out = "";
+  for (let i = 0; i < filename.length; i++) {
+    if (filename[i] == " " || filename[i] == "-") {
+      out += "_";
+    } else if (filename[i].search(reg) != -1) {
+      out += filename[i];
+    }
+  }
+  return out;
+}, "sanitize_filename");
 export {
   CompEdge,
   CompFile,
@@ -10351,6 +10585,7 @@ export {
   DHPage,
   DHPageContent,
   DHPageResource,
+  LineMap,
   Network,
   PageAccessMode,
   RegAlterPage,
@@ -10373,6 +10608,7 @@ export {
   RegTwoChoiceNav,
   RegViewport,
   Vector2D,
+  sanitize_filename,
   url_is_internal,
   url_to_page_name
 };
